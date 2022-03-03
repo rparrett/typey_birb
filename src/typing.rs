@@ -13,6 +13,7 @@ impl Default for WordList {
         let mut words = crate::words::WORDS
             .lines()
             .map(|w| w.to_owned())
+            .filter(|w| w.chars().count() > 0)
             .collect::<Vec<_>>();
         words.shuffle(&mut thread_rng());
         Self { words, index: 0 }
