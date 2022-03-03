@@ -2,7 +2,7 @@
 
 - [ ] add clock?
 - [ ] stats on death screen
-- [ ] retry button
-- [ ] don't start until first character is typed? (or make user type start)
+- [ ] retry button on death screen
+- [ ] start screen should have ghost birb character challenging you to a race
 - [ ] assets for obstacle and ground
 - [ ] "ghost bird with unfair advantage"
