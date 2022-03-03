@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render::primitives::Aabb};
 use rand::{thread_rng, Rng};
 
 mod typing;
@@ -23,6 +23,12 @@ pub enum Action {
 
 #[derive(Component)]
 struct Obstacle;
+#[derive(Component)]
+struct ScoreCollider;
+#[derive(Component)]
+struct ObstacleCollider;
+#[derive(Component)]
+struct Used;
 
 // Resources
 
@@ -45,14 +51,59 @@ fn main() {
         .add_system(update_score)
         .add_system(obstacle_movement)
         .add_system(spawn_obstacle)
+        .add_system(collision)
         //.add_system(rotate)
         //.add_system(daylight_cycle)
         .run();
 }
 
-// Marker for updating the position of the light, not needed unless we have multiple lights
-#[derive(Component)]
-struct Sun;
+fn collide_aabb(a: &Aabb, b: &Aabb) -> bool {
+    let a_min = a.min();
+    let a_max = a.max();
+    let b_min = b.min();
+    let b_max = b.max();
+
+    a_max.x > b_min.x
+        && a_min.x < b_max.x
+        && a_max.y > b_min.y
+        && a_min.y < b_max.y
+        && a_max.z > b_min.z
+        && a_min.z < b_max.z
+}
+
+fn collision(
+    mut commands: Commands,
+    birb_query: Query<(&Aabb, &Transform), With<Birb>>,
+    score_collider_query: Query<
+        (&Aabb, &GlobalTransform, Entity),
+        (With<ScoreCollider>, Without<Used>),
+    >,
+    obstacle_collider_query: Query<(&Aabb, &GlobalTransform), With<ObstacleCollider>>,
+    mut score: ResMut<Score>,
+) {
+    let (birb, transform) = birb_query.single();
+    let mut birb = birb.clone();
+    birb.center += transform.translation;
+
+    for (score_aabb, transform, entity) in score_collider_query.iter() {
+        let mut score_aabb = score_aabb.clone();
+        score_aabb.center += transform.translation;
+
+        if collide_aabb(&score_aabb, &birb) {
+            commands.entity(entity).insert(Used);
+            info!("score!");
+            score.0 += 2
+        }
+    }
+    for (obstacle_aabb, transform) in obstacle_collider_query.iter() {
+        let mut obstacle_aabb = obstacle_aabb.clone();
+        obstacle_aabb.center += transform.translation;
+
+        if collide_aabb(&obstacle_aabb, &birb) {
+            info!("ded!");
+        }
+    }
+}
 
 fn spawn_obstacle(
     mut commands: Commands,
@@ -72,42 +123,63 @@ fn spawn_obstacle(
     let gap_start = rng.gen_range(0.1..2.5);
     let gap_size = 2.;
 
+    let bottom: Mesh = shape::Box {
+        min_x: -0.5,
+        max_x: 0.5,
+        min_y: 0.,
+        max_y: gap_start,
+        min_z: -0.5,
+        max_z: 0.5,
+    }
+    .into();
+    let top: Mesh = shape::Box {
+        min_x: -0.5,
+        max_x: 0.5,
+        min_y: gap_start + gap_size,
+        max_y: 20.,
+        min_z: -0.5,
+        max_z: 0.5,
+    }
+    .into();
+
+    let middle: Mesh = shape::Box {
+        min_x: -0.1,
+        max_x: 1.0,
+        min_y: gap_start,
+        max_y: gap_start + gap_size,
+        min_z: -0.5,
+        max_z: 0.5,
+    }
+    .into();
+
     commands
         .spawn_bundle((Transform::from_xyz(20., 0., 0.), GlobalTransform::default()))
         .with_children(|parent| {
-            parent.spawn_bundle(PbrBundle {
-                mesh: meshes
-                    .add(
-                        shape::Box {
-                            min_x: -0.5,
-                            max_x: 0.5,
-                            min_y: 0.,
-                            max_y: gap_start,
-                            min_z: -0.5,
-                            max_z: 0.5,
-                        }
-                        .into(),
-                    )
-                    .into(),
-                ..Default::default()
-            });
-            parent.spawn_bundle(PbrBundle {
-                mesh: meshes
-                    .add(
-                        shape::Box {
-                            min_x: -0.5,
-                            max_x: 0.5,
-                            min_y: gap_start + gap_size,
-                            max_y: 20.,
-                            min_z: -0.5,
-                            max_z: 0.5,
-                        }
-                        .into(),
-                    )
-                    .into(),
-                material: materials.add(Color::RED.into()),
-                ..Default::default()
-            });
+            parent
+                .spawn()
+                .insert(bottom.compute_aabb().unwrap())
+                .insert_bundle(PbrBundle {
+                    mesh: meshes.add(bottom).into(),
+                    material: materials.add(Color::GREEN.into()),
+                    ..Default::default()
+                })
+                .insert(ObstacleCollider);
+
+            parent
+                .spawn()
+                .insert(top.compute_aabb().unwrap())
+                .insert_bundle(PbrBundle {
+                    mesh: meshes.add(top).into(),
+                    material: materials.add(Color::GREEN.into()),
+                    ..Default::default()
+                })
+                .insert(ObstacleCollider);
+
+            parent
+                .spawn()
+                .insert_bundle((Transform::default(), GlobalTransform::default()))
+                .insert(middle.compute_aabb().unwrap())
+                .insert(ScoreCollider);
         })
         .insert(Obstacle);
 }
@@ -226,15 +298,17 @@ fn setup(
             GlobalTransform::default(),
             TargetPosition(Vec3::new(0., 1., 0.)),
             CurrentRotationZ(0.),
+            Aabb {
+                center: Vec3::splat(0.),
+                half_extents: Vec3::splat(0.5),
+            },
             Birb,
         ))
         .with_children(|parent| {
             parent.spawn_scene(asset_server.load("bevybird.glb#Scene0"));
         });
 
-    commands
-        .spawn_bundle(DirectionalLightBundle {
-            ..Default::default()
-        })
-        .insert(Sun);
+    commands.spawn_bundle(DirectionalLightBundle {
+        ..Default::default()
+    });
 }
