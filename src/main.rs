@@ -68,8 +68,6 @@ fn main() {
                 .with_system(update_target_position)
                 .with_system(update_score),
         )
-        //.add_system(rotate)
-        //.add_system(daylight_cycle)
         .run();
 }
 
@@ -108,7 +106,6 @@ fn collision(
 
         if collide_aabb(&score_aabb, &birb) {
             commands.entity(entity).insert(Used);
-            info!("score!");
             score.0 += 2
         }
     }
@@ -118,7 +115,6 @@ fn collision(
 
         if collide_aabb(&obstacle_aabb, &birb) {
             state.set(AppState::Dead).unwrap();
-            info!("ded!");
         }
     }
 }
@@ -135,8 +131,6 @@ fn spawn_obstacle(
     }
 
     let mut rng = thread_rng();
-
-    info!("spawning obstacle");
 
     let gap_start = rng.gen_range(0.1..2.5);
     let gap_size = 2.;
