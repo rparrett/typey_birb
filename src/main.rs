@@ -10,6 +10,8 @@ struct Birb;
 
 #[derive(Component)]
 struct TargetPosition(Vec3);
+#[derive(Component)]
+struct CurrentRotationZ(f32);
 
 #[derive(Clone, Debug)]
 pub enum Action {
@@ -125,16 +127,42 @@ fn obstacle_movement(
     }
 }
 
-fn movement(mut query: Query<(&mut Transform, &TargetPosition)>, time: Res<Time>) {
+fn movement(
+    mut query: Query<(&mut Transform, &mut CurrentRotationZ, &TargetPosition)>,
+    time: Res<Time>,
+) {
     let speed = 2.;
+    let rot_speed = 2.;
+    let rot_speed_glide = 1.;
 
-    for (mut transform, target) in query.iter_mut() {
+    for (mut transform, mut rotation, target) in query.iter_mut() {
         let dist = target.0.distance(transform.translation);
         if dist < std::f32::EPSILON {
+            // if we are not moving, seek middle rotation
+            if rotation.0.abs() < std::f32::EPSILON {
+                continue;
+            }
+
+            let rot = if rotation.0 < 0. {
+                time.delta_seconds() * rot_speed_glide
+            } else {
+                time.delta_seconds() * -rot_speed_glide
+            };
+            rotation.0 += rot;
+            transform.rotation = Quat::from_rotation_z(rotation.0);
+
             continue;
         }
 
         let dir = target.0 - transform.translation;
+
+        let rot = if dir.y > 0. {
+            time.delta_seconds() * rot_speed
+        } else {
+            time.delta_seconds() * -rot_speed
+        };
+        rotation.0 = (rotation.0 + rot).clamp(-0.5, 0.5);
+        transform.rotation = Quat::from_rotation_z(rotation.0);
 
         let delta = dir.normalize() * time.delta_seconds() * speed;
         if dist < delta.length() {
@@ -197,6 +225,7 @@ fn setup(
             //.with_rotation(Quat::from_rotation_z(-std::f32::consts::FRAC_PI_2)),
             GlobalTransform::default(),
             TargetPosition(Vec3::new(0., 1., 0.)),
+            CurrentRotationZ(0.),
             Birb,
         ))
         .with_children(|parent| {
