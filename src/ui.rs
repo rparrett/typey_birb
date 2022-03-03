@@ -5,6 +5,8 @@ pub struct UiPlugin;
 
 #[derive(Component)]
 struct ScoreText;
+#[derive(Component)]
+struct StartScreen;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
@@ -12,12 +14,116 @@ impl Plugin for UiPlugin {
         app.add_startup_system(setup)
             .add_system(update_targets)
             .add_system(update_score)
-            .add_system_set(SystemSet::on_enter(AppState::Dead).with_system(death_screen));
+            .add_system_set(SystemSet::on_enter(AppState::Dead).with_system(death_screen))
+            .add_system_set(SystemSet::on_enter(AppState::NotPlaying).with_system(start_screen))
+            .add_system_set(
+                SystemSet::on_exit(AppState::NotPlaying).with_system(despawn_start_screen),
+            );
     }
 }
 
+fn despawn_start_screen(mut commands: Commands, query: Query<Entity, With<StartScreen>>) {
+    let entity = query.single();
+    commands.entity(entity).despawn_recursive();
+}
+
+fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let container = commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    top: Val::Px(0.),
+                    left: Val::Px(0.),
+                    ..Default::default()
+                },
+                size: Size::new(Val::Percent(50.0), Val::Percent(100.0)),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::ColumnReverse,
+                ..Default::default()
+            },
+            color: Color::NONE.into(),
+            ..Default::default()
+        })
+        .insert(StartScreen)
+        .id();
+
+    let bg = commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                size: Size::new(Val::Percent(70.0), Val::Percent(25.0)),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::SpaceEvenly,
+                flex_direction: FlexDirection::ColumnReverse,
+                ..Default::default()
+            },
+            color: Color::BLACK.into(),
+            ..Default::default()
+        })
+        .id();
+
+    let starttext = commands
+        .spawn_bundle(TextBundle {
+            style: Style {
+                margin: Rect::all(Val::Px(5.0)),
+                ..Default::default()
+            },
+            text: Text {
+                sections: vec![TextSection {
+                    value: "Type When Ready".into(),
+                    style: TextStyle {
+                        font: asset_server.load("Amatic-Bold.ttf"),
+                        font_size: 40.,
+                        color: Color::WHITE,
+                    },
+                }],
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .id();
+
+    let starttarget = commands
+        .spawn_bundle(TextBundle {
+            style: Style {
+                margin: Rect::all(Val::Px(5.0)),
+                ..Default::default()
+            },
+            text: Text {
+                sections: vec![
+                    TextSection {
+                        value: "".into(),
+                        style: TextStyle {
+                            font: asset_server.load("Amatic-Bold.ttf"),
+                            font_size: 40.,
+                            color: Color::GREEN,
+                        },
+                    },
+                    TextSection {
+                        value: "START".into(),
+                        style: TextStyle {
+                            font: asset_server.load("Amatic-Bold.ttf"),
+                            font_size: 40.,
+                            color: Color::WHITE,
+                        },
+                    },
+                ],
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(TypingTarget::new_whole(
+            "start".into(),
+            vec![crate::Action::Start],
+        ))
+        .id();
+
+    commands.entity(container).push_children(&[bg]);
+    commands.entity(bg).push_children(&[starttext, starttarget]);
+}
+
 fn death_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
-    info!("death_screen");
     let container = commands
         .spawn_bundle(NodeBundle {
             style: Style {
@@ -134,7 +240,7 @@ fn setup(
         })
         .id();
 
-    let mut not = HashSet::default();
+    let mut not: HashSet<char> = "start".chars().collect();
     let topword = wordlist.find_next_word(&not);
     for c in topword.chars() {
         not.insert(c);
@@ -171,7 +277,7 @@ fn setup(
         })
         .insert(crate::typing::TypingTarget::new(
             topword.into(),
-            crate::Action::BirbUp,
+            vec![crate::Action::BirbUp, crate::Action::IncScore(1)],
         ))
         .id();
 
@@ -220,7 +326,7 @@ fn setup(
         })
         .insert(crate::typing::TypingTarget::new(
             bottomword,
-            crate::Action::BirbDown,
+            vec![crate::Action::BirbDown, crate::Action::IncScore(1)],
         ))
         .id();
 

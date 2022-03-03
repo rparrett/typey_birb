@@ -9,6 +9,7 @@ mod words;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum AppState {
+    NotPlaying,
     Playing,
     Dead,
 }
@@ -29,6 +30,7 @@ pub enum Action {
     BirbDown,
     NewWord(Entity),
     IncScore(u32),
+    Start,
 }
 
 #[derive(Component)]
@@ -82,11 +84,12 @@ fn main() {
         .add_plugins(DefaultPlugins);
     #[cfg(feature = "inspector")]
     app.add_plugin(WorldInspectorPlugin::new());
-    app.add_state(AppState::Playing)
+    app.add_state(AppState::NotPlaying)
         .add_plugin(crate::typing::TypingPlugin)
         .add_plugin(crate::ui::UiPlugin)
         .add_event::<Action>()
         .add_startup_system(setup)
+        .add_system_set(SystemSet::on_update(AppState::NotPlaying).with_system(start_game))
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(movement)
@@ -290,6 +293,14 @@ fn movement(
             transform.translation = target.0;
         } else {
             transform.translation += delta;
+        }
+    }
+}
+
+fn start_game(mut events: EventReader<Action>, mut state: ResMut<State<AppState>>) {
+    for e in events.iter() {
+        if let Action::Start = e {
+            state.set(AppState::Playing);
         }
     }
 }

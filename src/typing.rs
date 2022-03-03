@@ -42,15 +42,25 @@ impl WordList {
 
 #[derive(Component)]
 pub struct TypingTarget {
-    pub action: crate::Action,
+    pub letter_actions: Vec<crate::Action>,
+    pub word_actions: Vec<crate::Action>,
     pub index: usize,
     pub word: String,
 }
 
 impl TypingTarget {
-    pub fn new(word: String, action: crate::Action) -> Self {
+    pub fn new(word: String, actions: Vec<crate::Action>) -> Self {
         Self {
-            action: action,
+            letter_actions: actions,
+            word_actions: vec![],
+            index: 0,
+            word,
+        }
+    }
+    pub fn new_whole(word: String, actions: Vec<crate::Action>) -> Self {
+        Self {
+            word_actions: actions,
+            letter_actions: vec![],
             index: 0,
             word,
         }
@@ -106,11 +116,17 @@ fn keyboard(
         for (entity, mut target) in query.iter_mut() {
             if let Some(next) = target.current_char() {
                 if next == event.char {
-                    events.send(target.action.clone());
-                    if target.advance_char().is_none() {
-                        events.send(crate::Action::NewWord(entity))
+                    for action in target.letter_actions.iter() {
+                        events.send(action.clone());
                     }
-                    events.send(crate::Action::IncScore(1));
+
+                    if target.advance_char().is_none() {
+                        events.send(crate::Action::NewWord(entity));
+
+                        for action in target.word_actions.iter() {
+                            events.send(action.clone());
+                        }
+                    }
                 }
             }
         }
