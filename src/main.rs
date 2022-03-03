@@ -439,12 +439,12 @@ fn update_target_position(mut events: EventReader<Action>, mut query: Query<&mut
         match e {
             Action::BirbUp => {
                 for mut target in query.iter_mut() {
-                    target.0.y += 0.25;
+                    target.0.y = (target.0.y + 0.25).min(6.5);
                 }
             }
             Action::BirbDown => {
                 for mut target in query.iter_mut() {
-                    target.0.y -= 0.25;
+                    target.0.y = (target.0.y - 0.25).max(0.5);
                 }
             }
             _ => {}
