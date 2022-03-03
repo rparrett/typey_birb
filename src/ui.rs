@@ -1,6 +1,6 @@
 use bevy::{prelude::*, utils::HashSet};
 
-use crate::{typing::TypingTarget, AppState};
+use crate::{typing::TypingTarget, AppState, FontAssets, GltfAssets};
 pub struct UiPlugin;
 
 #[derive(Component)]
@@ -11,11 +11,14 @@ struct StartScreen;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         // We need the font to have been loaded for this to work.
-        app.add_startup_system(setup)
-            .add_system(update_targets)
+        app.add_system(update_targets)
             .add_system(update_score)
             .add_system_set(SystemSet::on_enter(AppState::Dead).with_system(death_screen))
-            .add_system_set(SystemSet::on_enter(AppState::NotPlaying).with_system(start_screen))
+            .add_system_set(
+                SystemSet::on_enter(AppState::NotPlaying)
+                    .with_system(setup)
+                    .with_system(start_screen),
+            )
             .add_system_set(
                 SystemSet::on_exit(AppState::NotPlaying).with_system(despawn_start_screen),
             );
@@ -28,7 +31,11 @@ fn despawn_start_screen(mut commands: Commands, query: Query<Entity, With<StartS
     }
 }
 
-fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn start_screen(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    gltf_assets: Res<GltfAssets>,
+) {
     // rival
 
     commands
@@ -40,7 +47,7 @@ fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
             StartScreen,
         ))
         .with_children(|parent| {
-            parent.spawn_scene(asset_server.load("bevybird_gold.glb#Scene0"));
+            parent.spawn_scene(gltf_assets.birb_gold.clone());
         });
 
     // text
@@ -140,7 +147,11 @@ fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.entity(bg).push_children(&[starttext, starttarget]);
 }
 
-fn death_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn death_screen(
+    mut commands: Commands,
+    gltf_assets: Res<GltfAssets>,
+    font_assets: Res<FontAssets>,
+) {
     // rival
 
     commands
@@ -152,7 +163,7 @@ fn death_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
             StartScreen,
         ))
         .with_children(|parent| {
-            parent.spawn_scene(asset_server.load("bevybird_gold.glb#Scene0"));
+            parent.spawn_scene(gltf_assets.birb_gold.clone());
         });
 
     // text
@@ -201,7 +212,7 @@ fn death_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
                 sections: vec![TextSection {
                     value: "You Ded".into(),
                     style: TextStyle {
-                        font: asset_server.load("Amatic-Bold.ttf"),
+                        font: font_assets.main.clone(),
                         font_size: 40.,
                         color: Color::WHITE,
                     },
@@ -241,8 +252,8 @@ fn update_targets(
 
 fn setup(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     mut wordlist: ResMut<crate::typing::WordList>,
+    font_assets: Res<FontAssets>,
 ) {
     commands.spawn_bundle(UiCameraBundle::default());
 
@@ -290,7 +301,7 @@ fn setup(
                     TextSection {
                         value: "".into(),
                         style: TextStyle {
-                            font: asset_server.load("Amatic-Bold.ttf"),
+                            font: font_assets.main.clone(),
                             font_size: 40.,
                             color: Color::GREEN,
                         },
@@ -298,7 +309,7 @@ fn setup(
                     TextSection {
                         value: topword.clone(),
                         style: TextStyle {
-                            font: asset_server.load("Amatic-Bold.ttf"),
+                            font: font_assets.main.clone(),
                             font_size: 40.,
                             color: Color::WHITE,
                         },
@@ -339,7 +350,7 @@ fn setup(
                     TextSection {
                         value: "".into(),
                         style: TextStyle {
-                            font: asset_server.load("Amatic-Bold.ttf"),
+                            font: font_assets.main.clone(),
                             font_size: 40.,
                             color: Color::GREEN,
                         },
@@ -347,7 +358,7 @@ fn setup(
                     TextSection {
                         value: bottomword.clone(),
                         style: TextStyle {
-                            font: asset_server.load("Amatic-Bold.ttf"),
+                            font: font_assets.main.clone(),
                             font_size: 40.,
                             color: Color::WHITE,
                         },
@@ -378,7 +389,7 @@ fn setup(
                 sections: vec![TextSection {
                     value: "0".into(),
                     style: TextStyle {
-                        font: asset_server.load("Amatic-Bold.ttf"),
+                        font: font_assets.main.clone(),
                         font_size: 40.,
                         color: Color::WHITE,
                     },

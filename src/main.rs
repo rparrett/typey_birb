@@ -1,4 +1,9 @@
-use bevy::{prelude::*, render::primitives::Aabb};
+use bevy::{
+    log::{Level, LogSettings},
+    prelude::*,
+    render::primitives::Aabb,
+};
+use bevy_asset_loader::{AssetCollection, AssetLoader};
 #[cfg(feature = "inspector")]
 use bevy_inspector_egui::WorldInspectorPlugin;
 use rand::{thread_rng, Rng};
@@ -7,8 +12,23 @@ mod typing;
 mod ui;
 mod words;
 
+#[derive(AssetCollection)]
+struct GltfAssets {
+    #[asset(path = "bevybird_gold.glb#Scene0")]
+    birb_gold: Handle<Scene>,
+    #[asset(path = "bevybird.glb#Scene0")]
+    birb: Handle<Scene>,
+}
+
+#[derive(AssetCollection)]
+struct FontAssets {
+    #[asset(path = "Amatic-Bold.ttf")]
+    main: Handle<Font>,
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum AppState {
+    Loading,
     NotPlaying,
     Playing,
     Dead,
@@ -78,19 +98,30 @@ impl Speed {
 
 fn main() {
     let mut app = App::new();
+
+    AssetLoader::new(AppState::Loading)
+        .continue_to_state(AppState::NotPlaying)
+        .with_collection::<GltfAssets>()
+        .with_collection::<FontAssets>()
+        .build(&mut app);
+
     app.insert_resource(ObstacleTimer(Timer::from_seconds(5., true)))
         .init_resource::<Score>()
         .init_resource::<Speed>()
         .init_resource::<DistanceToSpawn>()
         .init_resource::<ObstacleSpacing>()
+        .insert_resource(LogSettings {
+            level: Level::DEBUG,
+            ..Default::default()
+        })
         .add_plugins(DefaultPlugins);
     #[cfg(feature = "inspector")]
     app.add_plugin(WorldInspectorPlugin::new());
-    app.add_state(AppState::NotPlaying)
+    app.add_state(AppState::Loading)
         .add_plugin(crate::typing::TypingPlugin)
         .add_plugin(crate::ui::UiPlugin)
         .add_event::<Action>()
-        .add_startup_system(setup)
+        .add_system_set(SystemSet::on_enter(AppState::NotPlaying).with_system(setup))
         .add_system_set(SystemSet::on_update(AppState::NotPlaying).with_system(start_game))
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
@@ -147,6 +178,7 @@ fn collision(
         obstacle_aabb.center += transform.translation;
 
         if collide_aabb(&obstacle_aabb, &birb) {
+            info!("dead");
             state.set(AppState::Dead).unwrap();
         }
     }
@@ -316,7 +348,8 @@ fn movement(
 fn start_game(mut events: EventReader<Action>, mut state: ResMut<State<AppState>>) {
     for e in events.iter() {
         if let Action::Start = e {
-            state.set(AppState::Playing);
+            info!("start");
+            state.set(AppState::Playing).unwrap();
         }
     }
 }
@@ -351,7 +384,7 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
+    gltf_assets: Res<GltfAssets>,
 ) {
     // camera
     commands.spawn_bundle(PerspectiveCameraBundle {
@@ -384,7 +417,7 @@ fn setup(
             Birb,
         ))
         .with_children(|parent| {
-            parent.spawn_scene(asset_server.load("bevybird.glb#Scene0"));
+            parent.spawn_scene(gltf_assets.birb.clone());
         });
 
     // directional 'sun' light

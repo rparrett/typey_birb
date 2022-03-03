@@ -12,3 +12,4 @@ inspector = ["bevy-inspector-egui"]
 bevy = { version = "0.6", features = ["jpeg"] }
 rand = "0.8"
 bevy-inspector-egui = { version = "0.8", optional = true }
+bevy_asset_loader = "0.9"
