@@ -33,8 +33,8 @@ fn despawn_start_screen(mut commands: Commands, query: Query<Entity, With<StartS
 
 fn start_screen(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     gltf_assets: Res<GltfAssets>,
+    font_assets: Res<FontAssets>,
 ) {
     // rival
 
@@ -98,7 +98,7 @@ fn start_screen(
                     value: "So you want to join the flock, eh?\nYou'll have to beat me first!\nType the word below when you're ready."
                         .into(),
                     style: TextStyle {
-                        font: asset_server.load("Amatic-Bold.ttf"),
+                        font: font_assets.main.clone(),
                         font_size: 40.,
                         color: Color::WHITE,
                     },
@@ -119,7 +119,7 @@ fn start_screen(
                     TextSection {
                         value: "".into(),
                         style: TextStyle {
-                            font: asset_server.load("Amatic-Bold.ttf"),
+                            font: font_assets.main.clone(),
                             font_size: 40.,
                             color: Color::GREEN,
                         },
@@ -127,7 +127,7 @@ fn start_screen(
                     TextSection {
                         value: "START".into(),
                         style: TextStyle {
-                            font: asset_server.load("Amatic-Bold.ttf"),
+                            font: font_assets.main.clone(),
                             font_size: 40.,
                             color: Color::WHITE,
                         },
