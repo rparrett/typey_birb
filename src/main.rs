@@ -5,6 +5,14 @@ mod typing;
 mod ui;
 mod words;
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+enum AppState {
+    Playing,
+    Dead,
+}
+
+// Components
+
 #[derive(Component)]
 struct Birb;
 
@@ -42,16 +50,20 @@ fn main() {
         .insert_resource(ObstacleTimer(Timer::from_seconds(5., true)))
         .init_resource::<Score>()
         .add_plugins(DefaultPlugins)
+        .add_state(AppState::Playing)
         .add_plugin(crate::typing::TypingPlugin)
         .add_plugin(crate::ui::UiPlugin)
         .add_event::<Action>()
         .add_startup_system(setup)
-        .add_system(movement)
-        .add_system(update_target_position)
-        .add_system(update_score)
-        .add_system(obstacle_movement)
-        .add_system(spawn_obstacle)
-        .add_system(collision)
+        .add_system_set(
+            SystemSet::on_update(AppState::Playing)
+                .with_system(movement)
+                .with_system(collision)
+                .with_system(obstacle_movement)
+                .with_system(spawn_obstacle)
+                .with_system(update_target_position)
+                .with_system(update_score),
+        )
         //.add_system(rotate)
         //.add_system(daylight_cycle)
         .run();
@@ -80,6 +92,7 @@ fn collision(
     >,
     obstacle_collider_query: Query<(&Aabb, &GlobalTransform), With<ObstacleCollider>>,
     mut score: ResMut<Score>,
+    mut state: ResMut<State<AppState>>,
 ) {
     let (birb, transform) = birb_query.single();
     let mut birb = birb.clone();
@@ -100,6 +113,7 @@ fn collision(
         obstacle_aabb.center += transform.translation;
 
         if collide_aabb(&obstacle_aabb, &birb) {
+            state.set(AppState::Dead).unwrap();
             info!("ded!");
         }
     }
