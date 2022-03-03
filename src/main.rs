@@ -7,9 +7,11 @@ use bevy_asset_loader::{AssetCollection, AssetLoader};
 #[cfg(feature = "inspector")]
 use bevy_inspector_egui::WorldInspectorPlugin;
 use rand::{thread_rng, Rng};
+use util::collide_aabb;
 
 mod typing;
 mod ui;
+mod util;
 mod words;
 
 #[derive(AssetCollection)]
@@ -134,20 +136,6 @@ fn main() {
                 .with_system(update_score),
         )
         .run();
-}
-
-fn collide_aabb(a: &Aabb, b: &Aabb) -> bool {
-    let a_min = a.min();
-    let a_max = a.max();
-    let b_min = b.min();
-    let b_max = b.max();
-
-    a_max.x > b_min.x
-        && a_min.x < b_max.x
-        && a_max.y > b_min.y
-        && a_min.y < b_max.y
-        && a_max.z > b_min.z
-        && a_min.z < b_max.z
 }
 
 fn collision(
@@ -310,11 +298,12 @@ fn movement(
 
         let dist = target.0.distance(transform.translation);
         if dist < std::f32::EPSILON {
-            // if we are not moving, seek middle rotation
+            // if we are not moving, seek a neutral rotation
             if rotation.0.abs() < std::f32::EPSILON {
                 continue;
             }
 
+            // otherwise, rotate with the direction of movement
             let rot = if rotation.0 < 0. {
                 time.delta_seconds() * rot_speed_glide
             } else {
