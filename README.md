@@ -1,7 +1,7 @@
 # TODO
 
 - [ ] collision / death
-- [ ] score (time elapsed + valid characters typed)
+- [ ] score a point or two when passing through a gate
 - [ ] gradually speed up game over time
 - [ ] don't start until first character is typed?
 - [ ] tilt bird when moving up/down
