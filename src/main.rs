@@ -31,9 +31,9 @@ struct FontAssets {
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum AppState {
     Loading,
-    NotPlaying,
+    StartScreen,
     Playing,
-    Dead,
+    EndScreen,
 }
 
 // Components
@@ -57,6 +57,7 @@ pub enum Action {
     NewWord(Entity),
     IncScore(u32),
     Start,
+    Retry,
 }
 
 #[derive(Component)]
@@ -104,7 +105,7 @@ fn main() {
     let mut app = App::new();
 
     AssetLoader::new(AppState::Loading)
-        .continue_to_state(AppState::NotPlaying)
+        .continue_to_state(AppState::StartScreen)
         .with_collection::<GltfAssets>()
         .with_collection::<FontAssets>()
         .build(&mut app);
@@ -126,10 +127,9 @@ fn main() {
         .add_plugin(crate::typing::TypingPlugin)
         .add_plugin(crate::ui::UiPlugin)
         .add_event::<Action>()
-        .add_system_set(SystemSet::on_enter(AppState::NotPlaying).with_system(setup))
+        .add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup))
+        .add_system_set(SystemSet::on_enter(AppState::StartScreen).with_system(spawn_birb))
         .add_system_set(SystemSet::on_enter(AppState::Playing).with_system(spawn_rival))
-        .add_system_set(SystemSet::on_update(AppState::NotPlaying).with_system(start_game))
-        .add_system_set(SystemSet::on_update(AppState::Dead).with_system(rival_movement))
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(movement)
@@ -140,7 +140,29 @@ fn main() {
                 .with_system(update_target_position)
                 .with_system(update_score),
         )
+        .add_system_set(SystemSet::on_update(AppState::StartScreen).with_system(start_game))
+        .add_system_set(
+            SystemSet::on_update(AppState::EndScreen)
+                .with_system(rival_movement)
+                .with_system(retry_game),
+        )
+        .add_system_set(SystemSet::on_exit(AppState::EndScreen).with_system(reset))
         .run();
+}
+
+fn reset(
+    mut commands: Commands,
+    query: Query<Entity, Or<(With<Obstacle>, With<Birb>, With<Rival>)>>,
+) {
+    commands.insert_resource(ObstacleTimer(Timer::from_seconds(5., true)));
+    commands.insert_resource(Score::default());
+    commands.insert_resource(Speed::default());
+    commands.insert_resource(DistanceToSpawn::default());
+    commands.insert_resource(ObstacleSpacing::default());
+
+    for entity in query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
 }
 
 fn rival_movement(mut query: Query<&mut Transform, With<Rival>>, time: Res<Time>) {
@@ -168,6 +190,27 @@ fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         ))
         .with_children(|parent| {
             parent.spawn_scene(gltf_assets.birb_gold.clone());
+        });
+}
+
+fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
+    commands
+        .spawn_bundle((
+            Transform::from_xyz(0., 1., 0.)
+                .with_scale(Vec3::splat(0.25))
+                .with_rotation(Quat::from_rotation_y(-std::f32::consts::PI)),
+            GlobalTransform::default(),
+            TargetPosition(Vec3::new(0., 1., 0.)),
+            CurrentRotationZ(0.),
+            CurrentRotationY(-std::f32::consts::PI),
+            Aabb {
+                center: Vec3::splat(0.),
+                half_extents: Vec3::splat(0.25),
+            },
+            Birb,
+        ))
+        .with_children(|parent| {
+            parent.spawn_scene(gltf_assets.birb.clone());
         });
 }
 
@@ -200,8 +243,7 @@ fn collision(
         obstacle_aabb.center += transform.translation;
 
         if collide_aabb(&obstacle_aabb, &birb) {
-            info!("dead");
-            state.set(AppState::Dead).unwrap();
+            state.set(AppState::EndScreen).unwrap();
         }
     }
 }
@@ -368,10 +410,17 @@ fn movement(
     }
 }
 
+fn retry_game(mut events: EventReader<Action>, mut state: ResMut<State<AppState>>) {
+    for e in events.iter() {
+        if let Action::Retry = e {
+            state.set(AppState::StartScreen).unwrap();
+        }
+    }
+}
+
 fn start_game(mut events: EventReader<Action>, mut state: ResMut<State<AppState>>) {
     for e in events.iter() {
         if let Action::Start = e {
-            info!("start");
             state.set(AppState::Playing).unwrap();
         }
     }
@@ -407,7 +456,6 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    gltf_assets: Res<GltfAssets>,
 ) {
     // camera
     commands.spawn_bundle(PerspectiveCameraBundle {
@@ -422,26 +470,6 @@ fn setup(
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..Default::default()
     });
-
-    // birb
-    commands
-        .spawn_bundle((
-            Transform::from_xyz(0., 1., 0.)
-                .with_scale(Vec3::splat(0.25))
-                .with_rotation(Quat::from_rotation_y(-std::f32::consts::PI)),
-            GlobalTransform::default(),
-            TargetPosition(Vec3::new(0., 1., 0.)),
-            CurrentRotationZ(0.),
-            CurrentRotationY(-std::f32::consts::PI),
-            Aabb {
-                center: Vec3::splat(0.),
-                half_extents: Vec3::splat(0.25),
-            },
-            Birb,
-        ))
-        .with_children(|parent| {
-            parent.spawn_scene(gltf_assets.birb.clone());
-        });
 
     // directional 'sun' light
     const HALF_SIZE: f32 = 30.0;

@@ -7,21 +7,29 @@ pub struct UiPlugin;
 struct ScoreText;
 #[derive(Component)]
 struct StartScreen;
+#[derive(Component)]
+struct EndScreen;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         // We need the font to have been loaded for this to work.
         app.add_system(update_targets)
             .add_system(update_score)
-            .add_system_set(SystemSet::on_enter(AppState::Dead).with_system(death_screen))
+            .add_system_set(SystemSet::on_enter(AppState::EndScreen).with_system(death_screen))
+            .add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup))
+            .add_system_set(SystemSet::on_enter(AppState::StartScreen).with_system(start_screen))
             .add_system_set(
-                SystemSet::on_enter(AppState::NotPlaying)
-                    .with_system(setup)
-                    .with_system(start_screen),
+                SystemSet::on_exit(AppState::StartScreen).with_system(despawn_start_screen),
             )
             .add_system_set(
-                SystemSet::on_exit(AppState::NotPlaying).with_system(despawn_start_screen),
+                SystemSet::on_exit(AppState::EndScreen).with_system(despawn_dead_screen),
             );
+    }
+}
+
+fn despawn_dead_screen(mut commands: Commands, query: Query<Entity, With<EndScreen>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn_recursive();
     }
 }
 
@@ -160,7 +168,7 @@ fn death_screen(
                 .with_scale(Vec3::splat(2.5))
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.1, -0.6, -0.7)),
             GlobalTransform::default(),
-            StartScreen,
+            EndScreen,
         ))
         .with_children(|parent| {
             parent.spawn_scene(gltf_assets.birb_gold.clone());
@@ -186,6 +194,7 @@ fn death_screen(
             color: Color::NONE.into(),
             ..Default::default()
         })
+        .insert(EndScreen)
         .id();
 
     let bg = commands
@@ -229,18 +238,32 @@ fn death_screen(
                 ..Default::default()
             },
             text: Text {
-                sections: vec![TextSection {
-                    value: "RETRY".into(),
-                    style: TextStyle {
-                        font: font_assets.main.clone(),
-                        font_size: 40.,
-                        color: Color::WHITE,
+                sections: vec![
+                    TextSection {
+                        value: "".into(),
+                        style: TextStyle {
+                            font: font_assets.main.clone(),
+                            font_size: 40.,
+                            color: Color::GREEN,
+                        },
                     },
-                }],
+                    TextSection {
+                        value: "RETRY".into(),
+                        style: TextStyle {
+                            font: font_assets.main.clone(),
+                            font_size: 40.,
+                            color: Color::WHITE,
+                        },
+                    },
+                ],
                 ..Default::default()
             },
             ..Default::default()
         })
+        .insert(TypingTarget::new_whole(
+            "retry".into(),
+            vec![crate::Action::Retry],
+        ))
         .id();
 
     commands.entity(container).push_children(&[bg]);
