@@ -308,13 +308,12 @@ fn setup(
     commands
         .spawn_bundle((
             Transform::from_xyz(0., 1., 0.).with_scale(Vec3::splat(0.25)),
-            //.with_rotation(Quat::from_rotation_z(-std::f32::consts::FRAC_PI_2)),
             GlobalTransform::default(),
             TargetPosition(Vec3::new(0., 1., 0.)),
             CurrentRotationZ(0.),
             Aabb {
                 center: Vec3::splat(0.),
-                half_extents: Vec3::splat(0.5),
+                half_extents: Vec3::splat(0.25),
             },
             Birb,
         ))
