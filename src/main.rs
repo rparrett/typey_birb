@@ -1,4 +1,6 @@
 use bevy::{prelude::*, render::primitives::Aabb};
+#[cfg(feature = "inspector")]
+use bevy_inspector_egui::WorldInspectorPlugin;
 use rand::{thread_rng, Rng};
 
 mod typing;
@@ -46,11 +48,13 @@ struct ObstacleTimer(Timer);
 struct Score(u32);
 
 fn main() {
-    App::new()
-        .insert_resource(ObstacleTimer(Timer::from_seconds(5., true)))
+    let mut app = App::new();
+    app.insert_resource(ObstacleTimer(Timer::from_seconds(5., true)))
         .init_resource::<Score>()
-        .add_plugins(DefaultPlugins)
-        .add_state(AppState::Playing)
+        .add_plugins(DefaultPlugins);
+    #[cfg(feature = "inspector")]
+    app.add_plugin(WorldInspectorPlugin::new());
+    app.add_state(AppState::Playing)
         .add_plugin(crate::typing::TypingPlugin)
         .add_plugin(crate::ui::UiPlugin)
         .add_event::<Action>()

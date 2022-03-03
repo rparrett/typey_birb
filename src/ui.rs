@@ -1,6 +1,6 @@
 use bevy::{prelude::*, utils::HashSet};
 
-use crate::typing::TypingTarget;
+use crate::{typing::TypingTarget, AppState};
 pub struct UiPlugin;
 
 #[derive(Component)]
@@ -11,8 +11,70 @@ impl Plugin for UiPlugin {
         // We need the font to have been loaded for this to work.
         app.add_startup_system(setup)
             .add_system(update_targets)
-            .add_system(update_score);
+            .add_system(update_score)
+            .add_system_set(SystemSet::on_enter(AppState::Dead).with_system(death_screen));
     }
+}
+
+fn death_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
+    info!("death_screen");
+    let container = commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    top: Val::Px(0.),
+                    left: Val::Px(0.),
+                    ..Default::default()
+                },
+                size: Size::new(Val::Percent(50.0), Val::Percent(100.0)),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::ColumnReverse,
+                ..Default::default()
+            },
+            color: Color::NONE.into(),
+            ..Default::default()
+        })
+        .id();
+
+    let bg = commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                size: Size::new(Val::Percent(70.0), Val::Percent(25.0)),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::SpaceEvenly,
+                flex_direction: FlexDirection::ColumnReverse,
+                ..Default::default()
+            },
+            color: Color::BLACK.into(),
+            ..Default::default()
+        })
+        .id();
+
+    let deadtext = commands
+        .spawn_bundle(TextBundle {
+            style: Style {
+                margin: Rect::all(Val::Px(5.0)),
+                ..Default::default()
+            },
+            text: Text {
+                sections: vec![TextSection {
+                    value: "You Ded".into(),
+                    style: TextStyle {
+                        font: asset_server.load("Amatic-Bold.ttf"),
+                        font_size: 40.,
+                        color: Color::WHITE,
+                    },
+                }],
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .id();
+
+    commands.entity(container).push_children(&[bg]);
+    commands.entity(bg).push_children(&[deadtext]);
 }
 
 fn update_score(mut query: Query<&mut Text, With<ScoreText>>, score: Res<crate::Score>) {
