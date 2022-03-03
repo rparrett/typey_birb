@@ -110,6 +110,7 @@ fn keyboard(
                     if target.advance_char().is_none() {
                         events.send(crate::Action::NewWord(entity))
                     }
+                    events.send(crate::Action::IncScore(1));
                 }
             }
         }

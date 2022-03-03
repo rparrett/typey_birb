@@ -3,10 +3,24 @@ use bevy::{prelude::*, utils::HashSet};
 use crate::typing::TypingTarget;
 pub struct UiPlugin;
 
+#[derive(Component)]
+struct ScoreText;
+
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         // We need the font to have been loaded for this to work.
-        app.add_startup_system(setup).add_system(update_targets);
+        app.add_startup_system(setup)
+            .add_system(update_targets)
+            .add_system(update_score);
+    }
+}
+
+fn update_score(mut query: Query<&mut Text, With<ScoreText>>, score: Res<crate::Score>) {
+    if !score.is_changed() {
+        return;
+    }
+    for mut text in query.iter_mut() {
+        text.sections[0].value = format!("{}", score.0);
     }
 }
 
@@ -148,7 +162,34 @@ fn setup(
         ))
         .id();
 
+    let scoretext = commands
+        .spawn_bundle(TextBundle {
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    right: Val::Px(5.0),
+                    ..Default::default()
+                },
+                margin: Rect::all(Val::Px(5.0)),
+                ..Default::default()
+            },
+            text: Text {
+                sections: vec![TextSection {
+                    value: "0".into(),
+                    style: TextStyle {
+                        font: asset_server.load("Amatic-Bold.ttf"),
+                        font_size: 40.,
+                        color: Color::WHITE,
+                    },
+                }],
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(ScoreText)
+        .id();
+
     commands.entity(root).push_children(&[topbar, bottombar]);
-    commands.entity(topbar).push_children(&[toptext]);
+    commands.entity(topbar).push_children(&[toptext, scoretext]);
     commands.entity(bottombar).push_children(&[bottomtext]);
 }

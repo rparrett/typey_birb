@@ -16,16 +16,23 @@ pub enum Action {
     BirbUp,
     BirbDown,
     NewWord(Entity),
+    IncScore(u32),
 }
 
 #[derive(Component)]
 struct Obstacle;
 
+// Resources
+
 struct ObstacleTimer(Timer);
+
+#[derive(Default)]
+struct Score(u32);
 
 fn main() {
     App::new()
         .insert_resource(ObstacleTimer(Timer::from_seconds(5., true)))
+        .init_resource::<Score>()
         .add_plugins(DefaultPlugins)
         .add_plugin(crate::typing::TypingPlugin)
         .add_plugin(crate::ui::UiPlugin)
@@ -33,6 +40,7 @@ fn main() {
         .add_startup_system(setup)
         .add_system(movement)
         .add_system(update_target_position)
+        .add_system(update_score)
         .add_system(obstacle_movement)
         .add_system(spawn_obstacle)
         //.add_system(rotate)
@@ -133,6 +141,14 @@ fn movement(mut query: Query<(&mut Transform, &TargetPosition)>, time: Res<Time>
             transform.translation = target.0;
         } else {
             transform.translation += delta;
+        }
+    }
+}
+
+fn update_score(mut events: EventReader<Action>, mut score: ResMut<Score>) {
+    for e in events.iter() {
+        if let Action::IncScore(inc) = e {
+            score.0 += inc
         }
     }
 }
