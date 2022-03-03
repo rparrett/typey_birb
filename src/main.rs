@@ -105,7 +105,8 @@ fn main() {
         .with_collection::<FontAssets>()
         .build(&mut app);
 
-    app.insert_resource(ObstacleTimer(Timer::from_seconds(5., true)))
+    app.insert_resource(ClearColor(Color::rgb_u8(177, 214, 222)))
+        .insert_resource(ObstacleTimer(Timer::from_seconds(5., true)))
         .init_resource::<Score>()
         .init_resource::<Speed>()
         .init_resource::<DistanceToSpawn>()
