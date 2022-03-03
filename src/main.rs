@@ -23,6 +23,8 @@ struct Birb;
 struct TargetPosition(Vec3);
 #[derive(Component)]
 struct CurrentRotationZ(f32);
+#[derive(Component)]
+struct CurrentRotationY(f32);
 
 #[derive(Clone, Debug)]
 pub enum Action {
@@ -252,14 +254,27 @@ fn obstacle_movement(
 }
 
 fn movement(
-    mut query: Query<(&mut Transform, &mut CurrentRotationZ, &TargetPosition)>,
+    mut query: Query<(
+        &mut Transform,
+        &mut CurrentRotationZ,
+        &mut CurrentRotationY,
+        &TargetPosition,
+    )>,
     time: Res<Time>,
 ) {
     let speed = 2.;
     let rot_speed = 2.;
     let rot_speed_glide = 1.;
 
-    for (mut transform, mut rotation, target) in query.iter_mut() {
+    for (mut transform, mut rotation, mut rotation_y, target) in query.iter_mut() {
+        // face forward when the game starts
+        if rotation_y.0 < std::f32::EPSILON {
+            let rot = time.delta_seconds() * rot_speed;
+            rotation_y.0 += rot;
+            transform.rotation =
+                Quat::from_rotation_z(rotation.0) * Quat::from_rotation_y(rotation_y.0);
+        }
+
         let dist = target.0.distance(transform.translation);
         if dist < std::f32::EPSILON {
             // if we are not moving, seek middle rotation
@@ -273,7 +288,8 @@ fn movement(
                 time.delta_seconds() * -rot_speed_glide
             };
             rotation.0 += rot;
-            transform.rotation = Quat::from_rotation_z(rotation.0);
+            transform.rotation =
+                Quat::from_rotation_z(rotation.0) * Quat::from_rotation_y(rotation_y.0);
 
             continue;
         }
@@ -354,10 +370,13 @@ fn setup(
     // birb
     commands
         .spawn_bundle((
-            Transform::from_xyz(0., 1., 0.).with_scale(Vec3::splat(0.25)),
+            Transform::from_xyz(0., 1., 0.)
+                .with_scale(Vec3::splat(0.25))
+                .with_rotation(Quat::from_rotation_y(-std::f32::consts::PI)),
             GlobalTransform::default(),
             TargetPosition(Vec3::new(0., 1., 0.)),
             CurrentRotationZ(0.),
+            CurrentRotationY(-std::f32::consts::PI),
             Aabb {
                 center: Vec3::splat(0.),
                 half_extents: Vec3::splat(0.25),

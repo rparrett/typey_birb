@@ -233,8 +233,8 @@ fn update_targets(
         if let Ok(mut text) = text_query.get_mut(entity) {
             let parts = target.word.split_at(target.index);
 
-            text.sections[0].value = parts.0.into();
-            text.sections[1].value = parts.1.into();
+            text.sections[0].value = parts.0.to_uppercase();
+            text.sections[1].value = parts.1.to_uppercase();
         }
     }
 }
