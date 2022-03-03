@@ -184,7 +184,7 @@ fn spawn_obstacle(
         min_x: -0.5,
         max_x: 0.5,
         min_y: gap_start + gap_size,
-        max_y: 20.,
+        max_y: 100.,
         min_z: -0.5,
         max_z: 0.5,
     }
@@ -201,7 +201,7 @@ fn spawn_obstacle(
     .into();
 
     commands
-        .spawn_bundle((Transform::from_xyz(20., 0., 0.), GlobalTransform::default()))
+        .spawn_bundle((Transform::from_xyz(30., 0., 0.), GlobalTransform::default()))
         .with_children(|parent| {
             parent
                 .spawn()
@@ -245,7 +245,7 @@ fn obstacle_movement(
 
     for (entity, mut transform) in query.iter_mut() {
         transform.translation.x -= delta;
-        if transform.translation.x < -20. {
+        if transform.translation.x < -30. {
             commands.entity(entity).despawn_recursive();
         }
     }
@@ -343,9 +343,10 @@ fn setup(
         ..Default::default()
     });
 
-    // plane
+    // ground
     commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 50.0 })),
+        mesh: meshes.add(Mesh::from(shape::Box::new(100., 1., 40.))),
+        transform: Transform::from_xyz(0., -0.5, 0.),
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..Default::default()
     });
@@ -367,7 +368,30 @@ fn setup(
             parent.spawn_scene(asset_server.load("bevybird.glb#Scene0"));
         });
 
+    // directional 'sun' light
+    const HALF_SIZE: f32 = 30.0;
     commands.spawn_bundle(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            // Configure the projection to better fit the scene
+            shadow_projection: OrthographicProjection {
+                left: -HALF_SIZE,
+                right: HALF_SIZE,
+                bottom: -HALF_SIZE,
+                top: HALF_SIZE,
+                near: -10.0 * HALF_SIZE,
+                far: 10.0 * HALF_SIZE,
+                ..Default::default()
+            },
+            shadows_enabled: true,
+            illuminance: 5000.,
+            ..Default::default()
+        },
+        transform: Transform {
+            translation: Vec3::new(0.0, 2.0, 0.0),
+            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4 / 2.)
+                * Quat::from_rotation_y(std::f32::consts::PI / 8.),
+            ..Default::default()
+        },
         ..Default::default()
     });
 }

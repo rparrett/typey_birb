@@ -23,11 +23,27 @@ impl Plugin for UiPlugin {
 }
 
 fn despawn_start_screen(mut commands: Commands, query: Query<Entity, With<StartScreen>>) {
-    let entity = query.single();
-    commands.entity(entity).despawn_recursive();
+    for entity in query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
 }
 
 fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // rival
+
+    commands
+        .spawn_bundle((
+            Transform::from_xyz(-7., 3., 0.)
+                .with_scale(Vec3::splat(3.))
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.1, -0.6, -0.7)),
+            GlobalTransform::default(),
+            StartScreen,
+        ))
+        .with_children(|parent| {
+            parent.spawn_scene(asset_server.load("bevybird_gold.glb#Scene0"));
+        });
+
+    // text
     let container = commands
         .spawn_bundle(NodeBundle {
             style: Style {
@@ -53,9 +69,10 @@ fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn_bundle(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(70.0), Val::Percent(25.0)),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::SpaceEvenly,
+                align_items: AlignItems::FlexStart,
+                justify_content: JustifyContent::SpaceBetween,
                 flex_direction: FlexDirection::ColumnReverse,
+                padding: Rect::all(Val::Px(10.0)),
                 ..Default::default()
             },
             color: Color::BLACK.into(),
@@ -66,12 +83,12 @@ fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     let starttext = commands
         .spawn_bundle(TextBundle {
             style: Style {
-                margin: Rect::all(Val::Px(5.0)),
                 ..Default::default()
             },
             text: Text {
                 sections: vec![TextSection {
-                    value: "Type When Ready".into(),
+                    value: "So you want to join the flock, eh?\nYou'll have to beat me first!\nType the word below when you're ready."
+                        .into(),
                     style: TextStyle {
                         font: asset_server.load("Amatic-Bold.ttf"),
                         font_size: 40.,
@@ -87,7 +104,6 @@ fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     let starttarget = commands
         .spawn_bundle(TextBundle {
             style: Style {
-                margin: Rect::all(Val::Px(5.0)),
                 ..Default::default()
             },
             text: Text {
@@ -124,6 +140,22 @@ fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn death_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // rival
+
+    commands
+        .spawn_bundle((
+            Transform::from_xyz(-7., 3., 0.)
+                .with_scale(Vec3::splat(3.))
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.1, -0.6, -0.7)),
+            GlobalTransform::default(),
+            StartScreen,
+        ))
+        .with_children(|parent| {
+            parent.spawn_scene(asset_server.load("bevybird_gold.glb#Scene0"));
+        });
+
+    // text
+
     let container = commands
         .spawn_bundle(NodeBundle {
             style: Style {
