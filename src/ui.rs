@@ -192,9 +192,10 @@ fn death_screen(
         .spawn_bundle(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(70.0), Val::Percent(40.0)),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::SpaceEvenly,
+                align_items: AlignItems::FlexStart,
+                justify_content: JustifyContent::Center,
                 flex_direction: FlexDirection::ColumnReverse,
+                padding: Rect::all(Val::Px(10.0)),
                 ..Default::default()
             },
             color: Color::BLACK.into(),
@@ -205,12 +206,11 @@ fn death_screen(
     let deadtext = commands
         .spawn_bundle(TextBundle {
             style: Style {
-                margin: Rect::all(Val::Px(5.0)),
                 ..Default::default()
             },
             text: Text {
                 sections: vec![TextSection {
-                    value: "You Ded".into(),
+                    value: "Oh wow, ouch!\nAre you alright?\nToo bad you're stuck at Z=0,\nthe path is a bit clearer a few units over.".into(),
                     style: TextStyle {
                         font: font_assets.main.clone(),
                         font_size: 40.,
