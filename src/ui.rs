@@ -193,7 +193,7 @@ fn death_screen(
             style: Style {
                 size: Size::new(Val::Percent(70.0), Val::Percent(40.0)),
                 align_items: AlignItems::FlexStart,
-                justify_content: JustifyContent::Center,
+                justify_content: JustifyContent::SpaceBetween,
                 flex_direction: FlexDirection::ColumnReverse,
                 padding: Rect::all(Val::Px(10.0)),
                 ..Default::default()
@@ -210,7 +210,27 @@ fn death_screen(
             },
             text: Text {
                 sections: vec![TextSection {
-                    value: "Oh wow, ouch!\nAre you alright?\nToo bad you're stuck at Z=0,\nthe path is a bit clearer a few units over.".into(),
+                    value: "Oh wow, ouch!\nToo bad you're stuck at Z=0,\nthe path is a bit clearer a few units over.".into(),
+                    style: TextStyle {
+                        font: font_assets.main.clone(),
+                        font_size: 40.,
+                        color: Color::WHITE,
+                    },
+                }],
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .id();
+
+    let retrytext = commands
+        .spawn_bundle(TextBundle {
+            style: Style {
+                ..Default::default()
+            },
+            text: Text {
+                sections: vec![TextSection {
+                    value: "RETRY".into(),
                     style: TextStyle {
                         font: font_assets.main.clone(),
                         font_size: 40.,
@@ -224,7 +244,7 @@ fn death_screen(
         .id();
 
     commands.entity(container).push_children(&[bg]);
-    commands.entity(bg).push_children(&[deadtext]);
+    commands.entity(bg).push_children(&[deadtext, retrytext]);
 }
 
 fn update_score(mut query: Query<&mut Text, With<ScoreText>>, score: Res<crate::Score>) {

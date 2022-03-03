@@ -4,6 +4,6 @@
 - [ ] stats on death screen
 - [ ] retry button on death screen
 - [ ] assets for obstacle and ground
-- [ ] "ghost bird with unfair advantage"
+- [ ] rival should face backwards on death
 - [ ] sfx
 - [ ] music

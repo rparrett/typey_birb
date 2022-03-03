@@ -40,6 +40,8 @@ enum AppState {
 
 #[derive(Component)]
 struct Birb;
+#[derive(Component)]
+struct Rival;
 
 #[derive(Component)]
 struct TargetPosition(Vec3);
@@ -125,10 +127,13 @@ fn main() {
         .add_plugin(crate::ui::UiPlugin)
         .add_event::<Action>()
         .add_system_set(SystemSet::on_enter(AppState::NotPlaying).with_system(setup))
+        .add_system_set(SystemSet::on_enter(AppState::Playing).with_system(spawn_rival))
         .add_system_set(SystemSet::on_update(AppState::NotPlaying).with_system(start_game))
+        .add_system_set(SystemSet::on_update(AppState::Dead).with_system(rival_movement))
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(movement)
+                .with_system(rival_movement)
                 .with_system(collision)
                 .with_system(obstacle_movement)
                 .with_system(spawn_obstacle)
@@ -136,6 +141,34 @@ fn main() {
                 .with_system(update_score),
         )
         .run();
+}
+
+fn rival_movement(mut query: Query<&mut Transform, With<Rival>>, time: Res<Time>) {
+    let speed = 5.;
+
+    for mut transform in query.iter_mut() {
+        if transform.translation.x < 5. {
+            transform.translation.x += speed * time.delta_seconds();
+        }
+
+        let floaty = (time.seconds_since_startup() as f32).sin();
+        transform.translation.y = 4. + floaty;
+
+        transform.rotation = Quat::from_rotation_z((time.seconds_since_startup() as f32).cos() / 4.)
+    }
+}
+
+fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
+    commands
+        .spawn_bundle((
+            Transform::from_xyz(-30., 4., 2.).with_scale(Vec3::splat(0.25)),
+            GlobalTransform::default(),
+            CurrentRotationZ(0.),
+            Rival,
+        ))
+        .with_children(|parent| {
+            parent.spawn_scene(gltf_assets.birb_gold.clone());
+        });
 }
 
 fn collision(
