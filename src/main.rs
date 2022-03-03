@@ -46,11 +46,39 @@ struct ObstacleTimer(Timer);
 
 #[derive(Default)]
 struct Score(u32);
+#[derive(Default)]
+struct DistanceToSpawn(f32);
+struct ObstacleSpacing(f32);
+impl Default for ObstacleSpacing {
+    fn default() -> Self {
+        Self(12.)
+    }
+}
+struct Speed {
+    current: f32,
+    max: f32,
+}
+impl Default for Speed {
+    fn default() -> Self {
+        Self {
+            current: 2.,
+            max: 5.,
+        }
+    }
+}
+impl Speed {
+    fn increase(&mut self, amt: f32) {
+        self.current = (self.current + amt).min(self.max);
+    }
+}
 
 fn main() {
     let mut app = App::new();
     app.insert_resource(ObstacleTimer(Timer::from_seconds(5., true)))
         .init_resource::<Score>()
+        .init_resource::<Speed>()
+        .init_resource::<DistanceToSpawn>()
+        .init_resource::<ObstacleSpacing>()
         .add_plugins(DefaultPlugins);
     #[cfg(feature = "inspector")]
     app.add_plugin(WorldInspectorPlugin::new());
@@ -121,14 +149,19 @@ fn collision(
 
 fn spawn_obstacle(
     mut commands: Commands,
-    time: Res<Time>,
-    mut timer: ResMut<ObstacleTimer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    spacing: Res<ObstacleSpacing>,
+    mut distance: ResMut<DistanceToSpawn>,
+    mut speed: ResMut<Speed>,
 ) {
-    if !timer.0.tick(time.delta()).just_finished() {
+    if distance.0 > 0. {
         return;
     }
+
+    distance.0 = spacing.0;
+
+    speed.increase(0.1);
 
     let mut rng = thread_rng();
 
@@ -200,11 +233,15 @@ fn obstacle_movement(
     mut commands: Commands,
     mut query: Query<(Entity, &mut Transform), With<Obstacle>>,
     time: Res<Time>,
+    mut distance: ResMut<DistanceToSpawn>,
+    speed: Res<Speed>,
 ) {
-    let speed = 2.;
+    let delta = time.delta_seconds() * speed.current;
+
+    distance.0 -= delta;
 
     for (entity, mut transform) in query.iter_mut() {
-        transform.translation.x -= time.delta_seconds() * speed;
+        transform.translation.x -= delta;
         if transform.translation.x < -20. {
             commands.entity(entity).despawn_recursive();
         }
