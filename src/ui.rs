@@ -33,8 +33,8 @@ fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands
         .spawn_bundle((
-            Transform::from_xyz(-7., 3., 0.)
-                .with_scale(Vec3::splat(3.))
+            Transform::from_xyz(-5.4, 2.3, 4.5)
+                .with_scale(Vec3::splat(2.5))
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.1, -0.6, -0.7)),
             GlobalTransform::default(),
             StartScreen,
@@ -44,16 +44,17 @@ fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 
     // text
+
     let container = commands
         .spawn_bundle(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
                 position: Rect {
-                    top: Val::Px(0.),
+                    bottom: Val::Px(0.),
                     left: Val::Px(0.),
                     ..Default::default()
                 },
-                size: Size::new(Val::Percent(50.0), Val::Percent(100.0)),
+                size: Size::new(Val::Percent(50.0), Val::Percent(70.0)),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 flex_direction: FlexDirection::ColumnReverse,
@@ -68,7 +69,7 @@ fn start_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     let bg = commands
         .spawn_bundle(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(70.0), Val::Percent(25.0)),
+                size: Size::new(Val::Percent(70.0), Val::Percent(40.0)),
                 align_items: AlignItems::FlexStart,
                 justify_content: JustifyContent::SpaceBetween,
                 flex_direction: FlexDirection::ColumnReverse,
@@ -144,8 +145,8 @@ fn death_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands
         .spawn_bundle((
-            Transform::from_xyz(-7., 3., 0.)
-                .with_scale(Vec3::splat(3.))
+            Transform::from_xyz(-5.4, 2.3, 4.5)
+                .with_scale(Vec3::splat(2.5))
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.1, -0.6, -0.7)),
             GlobalTransform::default(),
             StartScreen,
@@ -161,11 +162,11 @@ fn death_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
             style: Style {
                 position_type: PositionType::Absolute,
                 position: Rect {
-                    top: Val::Px(0.),
+                    bottom: Val::Px(0.),
                     left: Val::Px(0.),
                     ..Default::default()
                 },
-                size: Size::new(Val::Percent(50.0), Val::Percent(100.0)),
+                size: Size::new(Val::Percent(50.0), Val::Percent(70.0)),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 flex_direction: FlexDirection::ColumnReverse,
@@ -179,7 +180,7 @@ fn death_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     let bg = commands
         .spawn_bundle(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(70.0), Val::Percent(25.0)),
+                size: Size::new(Val::Percent(70.0), Val::Percent(40.0)),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::SpaceEvenly,
                 flex_direction: FlexDirection::ColumnReverse,
