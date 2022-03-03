@@ -1,8 +1,8 @@
 # TODO
 
 - [ ] add clock?
-- [ ] death screen
-- [ ] gradually speed up game over time
-- [ ] don't start until first character is typed?
+- [ ] stats on death screen
+- [ ] retry button
+- [ ] don't start until first character is typed? (or make user type start)
 - [ ] assets for obstacle and ground
 - [ ] "ghost bird with unfair advantage"
