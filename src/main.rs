@@ -266,7 +266,7 @@ fn spawn_obstacle(
 
     let mut rng = thread_rng();
 
-    let gap_start = rng.gen_range(0.1..2.5);
+    let gap_start = rng.gen_range(0.1..4.6);
     let gap_size = 2.;
 
     let bottom: Mesh = shape::Box {
