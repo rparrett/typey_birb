@@ -137,7 +137,7 @@ fn start_screen(
                         style: TextStyle {
                             font: font_assets.main.clone(),
                             font_size: 40.,
-                            color: Color::WHITE,
+                            color: Color::rgb_u8(255, 235, 146),
                         },
                     },
                 ],
@@ -252,7 +252,7 @@ fn death_screen(
                         style: TextStyle {
                             font: font_assets.main.clone(),
                             font_size: 40.,
-                            color: Color::WHITE,
+                            color: Color::rgb_u8(255, 235, 146),
                         },
                     },
                 ],
@@ -354,7 +354,7 @@ fn setup(
                         style: TextStyle {
                             font: font_assets.main.clone(),
                             font_size: 40.,
-                            color: Color::WHITE,
+                            color: Color::rgb_u8(255, 235, 146),
                         },
                     },
                 ],
@@ -403,7 +403,7 @@ fn setup(
                         style: TextStyle {
                             font: font_assets.main.clone(),
                             font_size: 40.,
-                            color: Color::WHITE,
+                            color: Color::rgb_u8(255, 235, 146),
                         },
                     },
                 ],
