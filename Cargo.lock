@@ -2971,7 +2971,7 @@ checksum = "c74c96594835e10fa545e2a51e8709f30b173a092bfd6036ef2cec53376244f3"
 
 [[package]]
 name = "typey_birb"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
