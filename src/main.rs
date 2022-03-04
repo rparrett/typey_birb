@@ -197,7 +197,7 @@ fn rival_movement(mut query: Query<&mut Transform, With<Rival>>, time: Res<Time>
     let speed = 5.;
 
     for mut transform in query.iter_mut() {
-        if transform.translation.x < 5. {
+        if transform.translation.x < 3. {
             transform.translation.x += speed * time.delta_seconds();
         }
 
