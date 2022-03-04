@@ -137,7 +137,7 @@ fn main() {
         .init_resource::<DistanceToSpawn>()
         .init_resource::<ObstacleSpacing>()
         .insert_resource(LogSettings {
-            level: Level::DEBUG,
+            level: Level::INFO,
             ..Default::default()
         })
         .add_plugins(DefaultPlugins);
