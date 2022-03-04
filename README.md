@@ -7,7 +7,10 @@
 - [ ] assets for obstacle and ground
 - [ ] rival should face backwards on death
 - [ ] sfx
-- [ ] music
+- [ ] less creepy music outside of menu
+- [ ] jazz up html
+- [ ] chrome audio fix
+- [ ] CI
 
 ## Acknowledgements
 
