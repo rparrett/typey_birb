@@ -320,6 +320,10 @@ fn setup(
                 size: Size::new(Val::Percent(100.0), Val::Px(50.)),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
+                padding: Rect {
+                    bottom: Val::Px(5.),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             color: Color::BLACK.into(),
@@ -374,6 +378,10 @@ fn setup(
                 size: Size::new(Val::Percent(100.0), Val::Px(50.)),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
+                padding: Rect {
+                    bottom: Val::Px(5.),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             color: Color::BLACK.into(),
