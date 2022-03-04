@@ -2,13 +2,13 @@
 
 ## TODO
 
-- [ ] add clock?
+- [X] just release the thing, we're out of time!
+- [ ] add clock
 - [ ] stats on death screen
 - [ ] assets for obstacle and ground
-- [ ] rival should face backwards on death
+- [ ] rival should face towards hero on death
 - [ ] jazz up html
 - [ ] is it too late to find someone who knows literally anything about music?
-- [ ] reset typing targets when retrying
 
 ## Acknowledgements
 
