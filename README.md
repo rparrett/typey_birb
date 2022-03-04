@@ -6,7 +6,6 @@
 - [ ] stats on death screen
 - [ ] assets for obstacle and ground
 - [ ] rival should face backwards on death
-- [ ] sfx
 - [ ] jazz up html
 - [ ] chrome audio fix
 - [ ] CI

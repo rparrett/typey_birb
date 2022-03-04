@@ -35,6 +35,14 @@ struct AudioAssets {
     menu: Handle<AudioSource>,
     #[asset(path = "play.ogg")]
     game: Handle<AudioSource>,
+    #[asset(path = "flap.ogg")]
+    flap: Handle<AudioSource>,
+    #[asset(path = "score.ogg")]
+    score: Handle<AudioSource>,
+    #[asset(path = "crash.ogg")]
+    crash: Handle<AudioSource>,
+    #[asset(path = "bump.ogg")]
+    bump: Handle<AudioSource>,
 }
 
 struct MusicController(Handle<AudioSink>);
@@ -276,6 +284,8 @@ fn collision(
     obstacle_collider_query: Query<(&Aabb, &GlobalTransform), With<ObstacleCollider>>,
     mut score: ResMut<Score>,
     mut state: ResMut<State<AppState>>,
+    audio_assets: Res<AudioAssets>,
+    audio: Res<Audio>,
 ) {
     let (birb, transform) = birb_query.single();
     let mut birb = birb.clone();
@@ -287,7 +297,9 @@ fn collision(
 
         if collide_aabb(&score_aabb, &birb) {
             commands.entity(entity).insert(Used);
-            score.0 += 2
+            score.0 += 2;
+
+            audio.play(audio_assets.score.clone());
         }
     }
     for (obstacle_aabb, transform) in obstacle_collider_query.iter() {
@@ -296,6 +308,8 @@ fn collision(
 
         if collide_aabb(&obstacle_aabb, &birb) {
             state.set(AppState::EndScreen).unwrap();
+
+            audio.play(audio_assets.crash.clone());
         }
     }
 }
@@ -486,17 +500,37 @@ fn update_score(mut events: EventReader<Action>, mut score: ResMut<Score>) {
     }
 }
 
-fn update_target_position(mut events: EventReader<Action>, mut query: Query<&mut TargetPosition>) {
+fn update_target_position(
+    mut events: EventReader<Action>,
+    mut query: Query<&mut TargetPosition>,
+    audio_assets: Res<AudioAssets>,
+    audio: Res<Audio>,
+) {
+    let min = 0.5;
+    let max = 6.5;
+
     for e in events.iter() {
         match e {
             Action::BirbUp => {
                 for mut target in query.iter_mut() {
-                    target.0.y = (target.0.y + 0.25).min(6.5);
+                    target.0.y += 0.25;
+                    if target.0.y > max {
+                        target.0.y = max;
+                        audio.play(audio_assets.bump.clone());
+                    } else {
+                        audio.play(audio_assets.flap.clone());
+                    }
                 }
             }
             Action::BirbDown => {
                 for mut target in query.iter_mut() {
-                    target.0.y = (target.0.y - 0.25).max(0.5);
+                    target.0.y -= 0.25;
+                    if target.0.y < min {
+                        target.0.y = min;
+                        audio.play(audio_assets.bump.clone());
+                    } else {
+                        audio.play(audio_assets.flap.clone());
+                    }
                 }
             }
             _ => {}
