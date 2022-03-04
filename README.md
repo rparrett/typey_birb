@@ -2,7 +2,7 @@
 
 Completed in ~2 days for Bevy Jam #1.
 
-`v0.1.2` is the submitted version, but development is unlikely to continue.
+`v0.1.3` is the submitted version, but development is unlikely to continue.
 
 ## TODO
 
