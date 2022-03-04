@@ -7,10 +7,10 @@
 - [ ] assets for obstacle and ground
 - [ ] rival should face backwards on death
 - [ ] sfx
-- [ ] less creepy music outside of menu
 - [ ] jazz up html
 - [ ] chrome audio fix
 - [ ] CI
+- [ ] is it too late to find someone who knows literally anything about music?
 
 ## Acknowledgements
 
