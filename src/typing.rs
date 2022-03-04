@@ -88,14 +88,20 @@ impl Plugin for TypingPlugin {
 
 fn new_words(
     mut events: EventReader<crate::Action>,
-    mut query: Query<&mut TypingTarget>,
+    mut query: Query<(Entity, &mut TypingTarget)>,
     mut wordlist: ResMut<WordList>,
 ) {
     for e in events.iter() {
         if let crate::Action::NewWord(entity) = e {
-            let not: HashSet<char> = query.iter().flat_map(|t| t.word.chars()).collect();
+            // build a list of characters to avoid for the next word,
+            // skipping the word we're replacing.
+            let not: HashSet<char> = query
+                .iter()
+                .filter(|(e, _)| e != entity)
+                .flat_map(|(_, t)| t.word.chars())
+                .collect();
 
-            if let Ok(mut target) = query.get_mut(*entity) {
+            if let Ok((_, mut target)) = query.get_mut(*entity) {
                 let next = wordlist.find_next_word(&not);
                 target.replace(next);
             }
