@@ -1,4 +1,5 @@
 use bevy::{
+    audio::AudioSink,
     log::{Level, LogSettings},
     prelude::*,
     render::primitives::Aabb,
@@ -27,6 +28,14 @@ struct FontAssets {
     #[asset(path = "Amatic-Bold.ttf")]
     main: Handle<Font>,
 }
+
+#[derive(AssetCollection)]
+struct AudioAssets {
+    #[asset(path = "menu.ogg")]
+    menu: Handle<AudioSource>,
+}
+
+struct MusicController(Handle<AudioSink>);
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum AppState {
@@ -108,6 +117,7 @@ fn main() {
         .continue_to_state(AppState::StartScreen)
         .with_collection::<GltfAssets>()
         .with_collection::<FontAssets>()
+        .with_collection::<AudioAssets>()
         .build(&mut app);
 
     app.insert_resource(ClearColor(Color::rgb_u8(177, 214, 222)))
@@ -127,7 +137,11 @@ fn main() {
         .add_plugin(crate::typing::TypingPlugin)
         .add_plugin(crate::ui::UiPlugin)
         .add_event::<Action>()
-        .add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup))
+        .add_system_set(
+            SystemSet::on_exit(AppState::Loading)
+                .with_system(setup)
+                .with_system(start_screen_music),
+        )
         .add_system_set(SystemSet::on_enter(AppState::StartScreen).with_system(spawn_birb))
         .add_system_set(SystemSet::on_enter(AppState::Playing).with_system(spawn_rival))
         .add_system_set(
@@ -191,6 +205,16 @@ fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         .with_children(|parent| {
             parent.spawn_scene(gltf_assets.birb_gold.clone());
         });
+}
+
+fn start_screen_music(
+    mut commands: Commands,
+    audio_assets: Res<AudioAssets>,
+    audio_sinks: Res<Assets<AudioSink>>,
+    audio: Res<Audio>,
+) {
+    let handle = audio_sinks.get_handle(audio.play_in_loop(audio_assets.menu.clone()));
+    commands.insert_resource(MusicController(handle));
 }
 
 fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
