@@ -363,7 +363,7 @@ fn setup(
             ..Default::default()
         })
         .insert(crate::typing::TypingTarget::new(
-            topword.into(),
+            topword,
             vec![crate::Action::BirbUp, crate::Action::IncScore(1)],
         ))
         .id();
