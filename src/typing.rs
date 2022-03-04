@@ -93,16 +93,13 @@ fn new_words(
     mut wordlist: ResMut<WordList>,
 ) {
     for e in events.iter() {
-        match e {
-            crate::Action::NewWord(entity) => {
-                let not: HashSet<char> = query.iter().map(|t| t.word.chars()).flatten().collect();
+        if let crate::Action::NewWord(entity) = e {
+            let not: HashSet<char> = query.iter().flat_map(|t| t.word.chars()).collect();
 
-                if let Ok(mut target) = query.get_mut(*entity) {
-                    let next = wordlist.find_next_word(&not);
-                    target.replace(next);
-                }
+            if let Ok(mut target) = query.get_mut(*entity) {
+                let next = wordlist.find_next_word(&not);
+                target.replace(next);
             }
-            _ => {}
         }
     }
 }

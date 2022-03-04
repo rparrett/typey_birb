@@ -357,7 +357,7 @@ fn spawn_obstacle(
                 .spawn()
                 .insert(bottom.compute_aabb().unwrap())
                 .insert_bundle(PbrBundle {
-                    mesh: meshes.add(bottom).into(),
+                    mesh: meshes.add(bottom),
                     material: materials.add(Color::GREEN.into()),
                     ..Default::default()
                 })
@@ -367,7 +367,7 @@ fn spawn_obstacle(
                 .spawn()
                 .insert(top.compute_aabb().unwrap())
                 .insert_bundle(PbrBundle {
-                    mesh: meshes.add(top).into(),
+                    mesh: meshes.add(top),
                     material: materials.add(Color::GREEN.into()),
                     ..Default::default()
                 })
