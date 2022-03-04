@@ -33,6 +33,8 @@ struct FontAssets {
 struct AudioAssets {
     #[asset(path = "menu.ogg")]
     menu: Handle<AudioSource>,
+    #[asset(path = "play.ogg")]
+    game: Handle<AudioSource>,
 }
 
 struct MusicController(Handle<AudioSink>);
@@ -137,13 +139,17 @@ fn main() {
         .add_plugin(crate::typing::TypingPlugin)
         .add_plugin(crate::ui::UiPlugin)
         .add_event::<Action>()
+        .add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup))
         .add_system_set(
-            SystemSet::on_exit(AppState::Loading)
-                .with_system(setup)
+            SystemSet::on_enter(AppState::StartScreen)
+                .with_system(spawn_birb)
                 .with_system(start_screen_music),
         )
-        .add_system_set(SystemSet::on_enter(AppState::StartScreen).with_system(spawn_birb))
-        .add_system_set(SystemSet::on_enter(AppState::Playing).with_system(spawn_rival))
+        .add_system_set(
+            SystemSet::on_enter(AppState::Playing)
+                .with_system(spawn_rival)
+                .with_system(game_music),
+        )
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(movement)
@@ -207,12 +213,34 @@ fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         });
 }
 
+fn game_music(
+    mut commands: Commands,
+    audio_assets: Res<AudioAssets>,
+    audio_sinks: Res<Assets<AudioSink>>,
+    audio: Res<Audio>,
+    controller: Option<Res<MusicController>>,
+) {
+    if let Some(controller) = controller {
+        if let Some(sink) = audio_sinks.get(&controller.0) {
+            sink.pause();
+        }
+    }
+    let handle = audio_sinks.get_handle(audio.play_in_loop(audio_assets.game.clone()));
+    commands.insert_resource(MusicController(handle));
+}
+
 fn start_screen_music(
     mut commands: Commands,
     audio_assets: Res<AudioAssets>,
     audio_sinks: Res<Assets<AudioSink>>,
     audio: Res<Audio>,
+    controller: Option<Res<MusicController>>,
 ) {
+    if let Some(controller) = controller {
+        if let Some(sink) = audio_sinks.get(&controller.0) {
+            sink.pause();
+        }
+    }
     let handle = audio_sinks.get_handle(audio.play_in_loop(audio_assets.menu.clone()));
     commands.insert_resource(MusicController(handle));
 }
