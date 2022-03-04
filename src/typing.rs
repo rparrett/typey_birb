@@ -80,7 +80,6 @@ impl TypingTarget {
 
 impl Plugin for TypingPlugin {
     fn build(&self, app: &mut App) {
-        // We need the font to have been loaded for this to work.
         app.init_resource::<WordList>()
             .add_system(new_words)
             .add_system(keyboard);
