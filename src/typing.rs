@@ -115,6 +115,8 @@ fn keyboard(
     mut events: EventWriter<crate::Action>,
 ) {
     for event in char_input_events.iter() {
+        let mut ok = false;
+
         for (entity, mut target) in query.iter_mut() {
             if let Some(next) = target.current_char() {
                 if next == event.char {
@@ -129,8 +131,14 @@ fn keyboard(
                             events.send(action.clone());
                         }
                     }
+
+                    ok = true;
                 }
             }
+        }
+
+        if !ok {
+            events.send(crate::Action::BadFlap);
         }
     }
 }

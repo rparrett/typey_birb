@@ -37,6 +37,8 @@ struct AudioAssets {
     game: Handle<AudioSource>,
     #[asset(path = "flap.ogg")]
     flap: Handle<AudioSource>,
+    #[asset(path = "badflap.ogg")]
+    badflap: Handle<AudioSource>,
     #[asset(path = "score.ogg")]
     score: Handle<AudioSource>,
     #[asset(path = "crash.ogg")]
@@ -71,6 +73,7 @@ struct CurrentRotationY(f32);
 
 #[derive(Clone, Debug)]
 pub enum Action {
+    BadFlap,
     BirbUp,
     BirbDown,
     NewWord(Entity),
@@ -170,13 +173,19 @@ fn main() {
                 .with_system(obstacle_movement)
                 .with_system(spawn_obstacle)
                 .with_system(update_target_position)
-                .with_system(update_score),
+                .with_system(update_score)
+                .with_system(bad_flap_sound),
         )
-        .add_system_set(SystemSet::on_update(AppState::StartScreen).with_system(start_game))
+        .add_system_set(
+            SystemSet::on_update(AppState::StartScreen)
+                .with_system(start_game)
+                .with_system(bad_flap_sound),
+        )
         .add_system_set(
             SystemSet::on_update(AppState::EndScreen)
                 .with_system(rival_movement)
-                .with_system(retry_game),
+                .with_system(retry_game)
+                .with_system(bad_flap_sound),
         )
         .add_system_set(SystemSet::on_exit(AppState::EndScreen).with_system(reset))
         .run();
@@ -223,6 +232,18 @@ fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         .with_children(|parent| {
             parent.spawn_scene(gltf_assets.birb_gold.clone());
         });
+}
+
+fn bad_flap_sound(
+    audio_assets: Res<AudioAssets>,
+    audio: Res<Audio>,
+    mut events: EventReader<Action>,
+) {
+    for e in events.iter() {
+        if let Action::BadFlap = e {
+            audio.play(audio_assets.badflap.clone());
+        }
+    }
 }
 
 fn game_music(
