@@ -506,24 +506,28 @@ fn movement(
         }
 
         let dist = target.0.distance(transform.translation);
-        if dist < std::f32::EPSILON {
-            // if we are not moving, seek a neutral rotation
-            if rotation.0.abs() < std::f32::EPSILON {
+
+        // if we are not moving, seek a neutral rotation
+        if dist <= std::f32::EPSILON {
+            if rotation.0.abs() <= std::f32::EPSILON {
                 continue;
             }
 
-            // otherwise, rotate with the direction of movement
-            let rot = if rotation.0 < 0. {
-                time.delta_seconds() * rot_speed_glide
+            let delta = time.delta_seconds() * rot_speed_glide;
+
+            if rotation.0 < 0. {
+                rotation.0 = (rotation.0 + delta).min(0.);
             } else {
-                time.delta_seconds() * -rot_speed_glide
+                rotation.0 = (rotation.0 - delta).max(0.);
             };
-            rotation.0 += rot;
+
             transform.rotation =
                 Quat::from_rotation_z(rotation.0) * Quat::from_rotation_y(rotation_y.0);
 
             continue;
         }
+
+        // otherwise, rotate with the direction of movement
 
         let dir = target.0 - transform.translation;
 
