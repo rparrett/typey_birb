@@ -10,6 +10,7 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 use rand::{thread_rng, Rng};
 use util::collide_aabb;
 
+mod cylinder;
 mod typing;
 mod ui;
 mod util;
@@ -360,24 +361,25 @@ fn spawn_obstacle(
     let gap_start = rng.gen_range(0.1..4.6);
     let gap_size = 2.;
 
-    let bottom: Mesh = shape::Box {
-        min_x: -0.5,
-        max_x: 0.5,
-        min_y: 0.,
-        max_y: gap_start,
-        min_z: -0.5,
-        max_z: 0.5,
+    let bottom_height = gap_start;
+    let bottom_cylinder: Mesh = cylinder::Cylinder {
+        radius: 0.75,
+        resolution: 16,
+        segments: 1,
+        height: bottom_height,
     }
     .into();
-    let top: Mesh = shape::Box {
-        min_x: -0.5,
-        max_x: 0.5,
-        min_y: gap_start + gap_size,
-        max_y: 100.,
-        min_z: -0.5,
-        max_z: 0.5,
+    let bottom_y = bottom_height / 2.;
+
+    let top_height = 10. - gap_start - gap_size;
+    let top_cylinder: Mesh = cylinder::Cylinder {
+        radius: 0.75,
+        resolution: 16,
+        segments: 1,
+        height: top_height,
     }
     .into();
+    let top_y = gap_start + gap_size + top_height / 2.;
 
     let middle: Mesh = shape::Box {
         min_x: -0.1,
@@ -394,9 +396,9 @@ fn spawn_obstacle(
         .with_children(|parent| {
             parent
                 .spawn()
-                .insert(bottom.compute_aabb().unwrap())
                 .insert_bundle(PbrBundle {
-                    mesh: meshes.add(bottom),
+                    transform: Transform::from_xyz(0., bottom_y, 0.),
+                    mesh: meshes.add(bottom_cylinder),
                     material: materials.add(Color::GREEN.into()),
                     ..Default::default()
                 })
@@ -404,9 +406,9 @@ fn spawn_obstacle(
 
             parent
                 .spawn()
-                .insert(top.compute_aabb().unwrap())
                 .insert_bundle(PbrBundle {
-                    mesh: meshes.add(top),
+                    transform: Transform::from_xyz(0., top_y, 0.),
+                    mesh: meshes.add(top_cylinder),
                     material: materials.add(Color::GREEN.into()),
                     ..Default::default()
                 })
