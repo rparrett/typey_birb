@@ -537,7 +537,10 @@ fn movement(
             time.delta_seconds() * -rot_speed
         };
         rotation.0 = (rotation.0 + rot).clamp(-0.5, 0.5);
-        transform.rotation = Quat::from_rotation_z(rotation.0);
+        transform.rotation =
+            Quat::from_rotation_z(rotation.0) * Quat::from_rotation_y(rotation_y.0);
+
+        // seek the target position
 
         let delta = dir.normalize() * time.delta_seconds() * speed;
         if dist < delta.length() {
