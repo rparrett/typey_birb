@@ -336,6 +336,10 @@ fn collision(
             state.set(AppState::EndScreen).unwrap();
 
             audio.play(audio_assets.crash.clone());
+
+            // it's possible to collide with the pipe and flange simultaneously
+            // so we should only react to one game-ending collision.
+            break;
         }
     }
 }
@@ -361,25 +365,44 @@ fn spawn_obstacle(
     let gap_start = rng.gen_range(0.1..4.6);
     let gap_size = 2.;
 
+    let flange_height = 0.4;
+    let flange_radius = 0.8;
+
     let bottom_height = gap_start;
-    let bottom_cylinder: Mesh = cylinder::Cylinder {
-        radius: 0.75,
-        resolution: 16,
-        segments: 1,
-        height: bottom_height,
-    }
-    .into();
+    let bottom_cylinder = meshes.add(
+        cylinder::Cylinder {
+            radius: 0.75,
+            resolution: 16,
+            segments: 1,
+            height: bottom_height,
+        }
+        .into(),
+    );
     let bottom_y = bottom_height / 2.;
 
     let top_height = 10. - gap_start - gap_size;
-    let top_cylinder: Mesh = cylinder::Cylinder {
-        radius: 0.75,
-        resolution: 16,
-        segments: 1,
-        height: top_height,
-    }
-    .into();
+    let top_cylinder = meshes.add(
+        cylinder::Cylinder {
+            radius: 0.75,
+            resolution: 16,
+            segments: 1,
+            height: top_height,
+        }
+        .into(),
+    );
     let top_y = gap_start + gap_size + top_height / 2.;
+
+    let flange = meshes.add(
+        cylinder::Cylinder {
+            radius: flange_radius,
+            resolution: 16,
+            segments: 1,
+            height: flange_height,
+        }
+        .into(),
+    );
+    let bottom_flange_y = gap_start - flange_height / 2.;
+    let top_flange_y = gap_start + gap_size + flange_height / 2.;
 
     let middle: Mesh = shape::Box {
         min_x: -0.1,
@@ -398,7 +421,16 @@ fn spawn_obstacle(
                 .spawn()
                 .insert_bundle(PbrBundle {
                     transform: Transform::from_xyz(0., bottom_y, 0.),
-                    mesh: meshes.add(bottom_cylinder),
+                    mesh: bottom_cylinder,
+                    material: materials.add(Color::GREEN.into()),
+                    ..Default::default()
+                })
+                .insert(ObstacleCollider);
+            parent
+                .spawn()
+                .insert_bundle(PbrBundle {
+                    transform: Transform::from_xyz(0., bottom_flange_y, 0.),
+                    mesh: flange.clone(),
                     material: materials.add(Color::GREEN.into()),
                     ..Default::default()
                 })
@@ -408,7 +440,16 @@ fn spawn_obstacle(
                 .spawn()
                 .insert_bundle(PbrBundle {
                     transform: Transform::from_xyz(0., top_y, 0.),
-                    mesh: meshes.add(top_cylinder),
+                    mesh: top_cylinder,
+                    material: materials.add(Color::GREEN.into()),
+                    ..Default::default()
+                })
+                .insert(ObstacleCollider);
+            parent
+                .spawn()
+                .insert_bundle(PbrBundle {
+                    transform: Transform::from_xyz(0., top_flange_y, 0.),
+                    mesh: flange.clone(),
                     material: materials.add(Color::GREEN.into()),
                     ..Default::default()
                 })
