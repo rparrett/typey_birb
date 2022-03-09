@@ -8,9 +8,10 @@ Completed in ~2 days for Bevy Jam #1.
 
 - [X] just release the thing, we're out of time!
 - [ ] add clock
-- [ ] stats on death screen
-- [ ] assets for obstacle and ground
-- [ ] rival should face towards hero on death
+- [ ] stats on death screen (time, meters travelled, flaps, final score)
+- [ ] add some terrain so that it's more obvious we're moving
+- [ ] add flanges to the pipes
+- [ ] rival should do a loop around the obstacle and face towards hero on death
 - [ ] jazz up html
 - [ ] is it too late to find someone who knows literally anything about music?
 
