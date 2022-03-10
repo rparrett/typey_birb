@@ -1,6 +1,9 @@
+use crate::{
+    typing::{TypingTarget, WordList},
+    Action, AppState, FontAssets, GltfAssets, Score,
+};
 use bevy::{prelude::*, utils::HashSet};
 
-use crate::{typing::TypingTarget, AppState, FontAssets, GltfAssets, Score};
 pub struct UiPlugin;
 
 #[derive(Component)]
@@ -145,10 +148,7 @@ fn start_screen(
             },
             ..Default::default()
         })
-        .insert(TypingTarget::new_whole(
-            "start".into(),
-            vec![crate::Action::Start],
-        ))
+        .insert(TypingTarget::new_whole("start".into(), vec![Action::Start]))
         .id();
 
     commands.entity(container).push_children(&[bg]);
@@ -271,17 +271,14 @@ fn death_screen(
             },
             ..Default::default()
         })
-        .insert(TypingTarget::new_whole(
-            "retry".into(),
-            vec![crate::Action::Retry],
-        ))
+        .insert(TypingTarget::new_whole("retry".into(), vec![Action::Retry]))
         .id();
 
     commands.entity(container).push_children(&[bg]);
     commands.entity(bg).push_children(&[deadtext, retrytext]);
 }
 
-fn update_score(mut query: Query<&mut Text, With<ScoreText>>, score: Res<crate::Score>) {
+fn update_score(mut query: Query<&mut Text, With<ScoreText>>, score: Res<Score>) {
     if !score.is_changed() {
         return;
     }
@@ -304,11 +301,7 @@ fn update_targets(
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    mut wordlist: ResMut<crate::typing::WordList>,
-    font_assets: Res<FontAssets>,
-) {
+fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Res<FontAssets>) {
     commands.spawn_bundle(UiCameraBundle::default());
 
     // root node
@@ -377,9 +370,9 @@ fn setup(
             },
             ..Default::default()
         })
-        .insert(crate::typing::TypingTarget::new(
+        .insert(TypingTarget::new(
             topword,
-            vec![crate::Action::BirbUp, crate::Action::IncScore(1)],
+            vec![Action::BirbUp, Action::IncScore(1)],
         ))
         .id();
 
@@ -430,9 +423,9 @@ fn setup(
             },
             ..Default::default()
         })
-        .insert(crate::typing::TypingTarget::new(
+        .insert(TypingTarget::new(
             bottomword,
-            vec![crate::Action::BirbDown, crate::Action::IncScore(1)],
+            vec![Action::BirbDown, Action::IncScore(1)],
         ))
         .id();
 
