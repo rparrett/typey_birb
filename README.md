@@ -7,10 +7,12 @@ Completed in ~2 days for Bevy Jam #1.
 ## TODO
 
 - [X] just release the thing, we're out of time!
+- [ ] hero should bob up and down slightly on start screen
+- [ ] hero should bob up and down very slightly while cruising
 - [ ] add clock
-- [ ] stats on death screen (time, meters travelled, flaps, final score)
+- [ ] stats on death screen (time, flaps, final score)
+- [ ] add score thresholds (score 200 points to join flock as junior member and so on)
 - [ ] add some terrain so that it's more obvious we're moving
-- [ ] add flanges to the pipes
 - [ ] rival should do a loop around the obstacle and face towards hero on death
 - [ ] jazz up html
 - [ ] is it too late to find someone who knows literally anything about music?
