@@ -9,6 +9,7 @@ Completed in ~2 days for Bevy Jam #1.
 - [X] just release the thing, we're out of time!
 - [ ] hero should bob up and down slightly on start screen
 - [ ] hero should bob up and down very slightly while cruising
+- [ ] add sfx / music mute buttons
 - [ ] add clock
 - [ ] stats on death screen (time, flaps, final score)
 - [ ] add score thresholds (score 200 points to join flock as junior member and so on)
