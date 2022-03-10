@@ -55,6 +55,7 @@ enum AppState {
     Loading,
     StartScreen,
     Playing,
+    Paused,
     EndScreen,
 }
 
@@ -140,22 +141,31 @@ fn main() {
     })
     .insert_resource(ClearColor(Color::rgb_u8(177, 214, 222)))
     .insert_resource(ObstacleTimer(Timer::from_seconds(5., true)))
-    .init_resource::<Score>()
-    .init_resource::<Speed>()
-    .init_resource::<DistanceToSpawn>()
-    .init_resource::<ObstacleSpacing>()
     .insert_resource(LogSettings {
         level: Level::INFO,
         ..Default::default()
     })
     .add_plugins(DefaultPlugins);
+
     #[cfg(feature = "inspector")]
-    app.add_plugin(WorldInspectorPlugin::new());
-    app.add_state(AppState::Loading)
-        .add_plugin(crate::typing::TypingPlugin)
-        .add_plugin(crate::ui::UiPlugin)
-        .add_event::<Action>()
-        .add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup))
+    {
+        app.add_plugin(WorldInspectorPlugin::new());
+        app.add_system_set(SystemSet::on_update(AppState::Paused).with_system(pause));
+        app.add_system_set(SystemSet::on_update(AppState::Playing).with_system(pause));
+    }
+
+    app.add_state(AppState::Loading);
+
+    app.init_resource::<Score>()
+        .init_resource::<Speed>()
+        .init_resource::<DistanceToSpawn>()
+        .init_resource::<ObstacleSpacing>()
+        .add_event::<Action>();
+
+    app.add_plugin(crate::typing::TypingPlugin)
+        .add_plugin(crate::ui::UiPlugin);
+
+    app.add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup))
         .add_system_set(
             SystemSet::on_enter(AppState::StartScreen)
                 .with_system(spawn_birb)
@@ -175,7 +185,8 @@ fn main() {
                 .with_system(spawn_obstacle)
                 .with_system(update_target_position)
                 .with_system(update_score)
-                .with_system(bad_flap_sound),
+                .with_system(bad_flap_sound)
+                .with_system(pause),
         )
         .add_system_set(
             SystemSet::on_update(AppState::StartScreen)
@@ -190,6 +201,22 @@ fn main() {
         )
         .add_system_set(SystemSet::on_exit(AppState::EndScreen).with_system(reset))
         .run();
+}
+
+fn pause(mut keyboard: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {
+    if keyboard.just_pressed(KeyCode::Escape) {
+        match state.current() {
+            AppState::Paused => {
+                state.set(AppState::Playing).unwrap();
+                keyboard.clear();
+            }
+            AppState::Playing => {
+                state.set(AppState::Paused).unwrap();
+                keyboard.clear();
+            }
+            _ => {}
+        }
+    }
 }
 
 fn reset(
