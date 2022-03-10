@@ -70,8 +70,6 @@ struct Rival;
 struct TargetPosition(Vec3);
 #[derive(Component)]
 struct CurrentRotationZ(f32);
-#[derive(Component)]
-struct CurrentRotationY(f32);
 
 #[derive(Clone, Debug)]
 pub enum Action {
@@ -315,7 +313,6 @@ fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
             GlobalTransform::default(),
             TargetPosition(pos),
             CurrentRotationZ(0.),
-            CurrentRotationY(0.),
             Aabb {
                 center: Vec3::splat(0.),
                 half_extents: Vec3::splat(0.25),
@@ -511,27 +508,14 @@ fn obstacle_movement(
 }
 
 fn movement(
-    mut query: Query<(
-        &mut Transform,
-        &mut CurrentRotationZ,
-        &mut CurrentRotationY,
-        &TargetPosition,
-    )>,
+    mut query: Query<(&mut Transform, &mut CurrentRotationZ, &TargetPosition)>,
     time: Res<Time>,
 ) {
     let speed = 2.;
     let rot_speed = 2.;
     let rot_speed_glide = 1.;
 
-    for (mut transform, mut rotation, mut rotation_y, target) in query.iter_mut() {
-        // face forward when the game starts
-        if rotation_y.0 < std::f32::EPSILON {
-            let rot = time.delta_seconds() * rot_speed;
-            rotation_y.0 += rot;
-            transform.rotation =
-                Quat::from_rotation_z(rotation.0) * Quat::from_rotation_y(rotation_y.0);
-        }
-
+    for (mut transform, mut rotation, target) in query.iter_mut() {
         let dist = target.0.distance(transform.translation);
 
         // if we are not moving, seek a neutral rotation
@@ -548,8 +532,7 @@ fn movement(
                 rotation.0 = (rotation.0 - delta).max(0.);
             };
 
-            transform.rotation =
-                Quat::from_rotation_z(rotation.0) * Quat::from_rotation_y(rotation_y.0);
+            transform.rotation = Quat::from_rotation_z(rotation.0);
 
             continue;
         }
@@ -564,8 +547,7 @@ fn movement(
             time.delta_seconds() * -rot_speed
         };
         rotation.0 = (rotation.0 + rot).clamp(-0.5, 0.5);
-        transform.rotation =
-            Quat::from_rotation_z(rotation.0) * Quat::from_rotation_y(rotation_y.0);
+        transform.rotation = Quat::from_rotation_z(rotation.0);
 
         // seek the target position
 
