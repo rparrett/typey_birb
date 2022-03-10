@@ -92,9 +92,6 @@ struct ObstacleCollider;
 struct Used;
 
 // Resources
-
-struct ObstacleTimer(Timer);
-
 #[derive(Default)]
 struct Score(u32);
 #[derive(Default)]
@@ -138,7 +135,6 @@ fn main() {
         ..Default::default()
     })
     .insert_resource(ClearColor(Color::rgb_u8(177, 214, 222)))
-    .insert_resource(ObstacleTimer(Timer::from_seconds(5., true)))
     .insert_resource(LogSettings {
         level: Level::INFO,
         ..Default::default()
@@ -221,7 +217,6 @@ fn reset(
     mut commands: Commands,
     query: Query<Entity, Or<(With<Obstacle>, With<Birb>, With<Rival>)>>,
 ) {
-    commands.insert_resource(ObstacleTimer(Timer::from_seconds(5., true)));
     commands.insert_resource(Score::default());
     commands.insert_resource(Speed::default());
     commands.insert_resource(DistanceToSpawn::default());
