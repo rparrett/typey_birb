@@ -252,7 +252,7 @@ fn rival_movement(mut query: Query<&mut Transform, With<Rival>>, time: Res<Time>
 fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     commands
         .spawn_bundle((
-            Transform::from_xyz(-30., 4., 2.5).with_scale(Vec3::splat(0.25)),
+            Transform::from_xyz(-10., 4., 2.5).with_scale(Vec3::splat(0.25)),
             GlobalTransform::default(),
             CurrentRotationZ(0.),
             Rival,
@@ -647,7 +647,7 @@ fn setup(
 ) {
     // camera
     commands.spawn_bundle(PerspectiveCameraBundle {
-        transform: Transform::from_xyz(3.5, 5.8, 11.7).with_rotation(Quat::from_rotation_x(-0.211)),
+        transform: Transform::from_xyz(4.5, 5.8, 11.7).with_rotation(Quat::from_rotation_x(-0.211)),
         ..Default::default()
     });
 

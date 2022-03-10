@@ -48,7 +48,7 @@ fn start_screen(
 
     commands
         .spawn_bundle((
-            Transform::from_xyz(7.7, 4.0, -0.2)
+            Transform::from_xyz(8.4, 4.0, -0.2)
                 .with_scale(Vec3::splat(2.5))
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
             GlobalTransform::default(),
@@ -164,7 +164,7 @@ fn death_screen(
 
     commands
         .spawn_bundle((
-            Transform::from_xyz(7.7, 4.0, -0.2)
+            Transform::from_xyz(8.4, 4.0, -0.2)
                 .with_scale(Vec3::splat(2.5))
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
             GlobalTransform::default(),
