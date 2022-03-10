@@ -275,7 +275,7 @@ fn update_score(mut query: Query<&mut Text, With<ScoreText>>, score: Res<crate::
         return;
     }
     for mut text in query.iter_mut() {
-        text.sections[0].value = format!("{}", score.0);
+        text.sections[1].value = format!("{}", score.0);
     }
 }
 
@@ -430,21 +430,32 @@ fn setup(
             style: Style {
                 position_type: PositionType::Absolute,
                 position: Rect {
-                    right: Val::Px(5.0),
+                    top: Val::Px(3.0),
+                    left: Val::Px(10.0),
                     ..Default::default()
                 },
-                margin: Rect::all(Val::Px(5.0)),
+                padding: Rect::all(Val::Px(5.0)),
                 ..Default::default()
             },
             text: Text {
-                sections: vec![TextSection {
-                    value: "0".into(),
-                    style: TextStyle {
-                        font: font_assets.main.clone(),
-                        font_size: 40.,
-                        color: Color::WHITE,
+                sections: vec![
+                    TextSection {
+                        value: "SCORE ".into(),
+                        style: TextStyle {
+                            font: font_assets.main.clone(),
+                            font_size: 40.,
+                            color: Color::rgba(0.8, 0.8, 0.8, 1.0),
+                        },
                     },
-                }],
+                    TextSection {
+                        value: "0".into(),
+                        style: TextStyle {
+                            font: font_assets.main.clone(),
+                            font_size: 40.,
+                            color: Color::WHITE,
+                        },
+                    },
+                ],
                 ..Default::default()
             },
             ..Default::default()
