@@ -252,7 +252,7 @@ fn rival_movement(mut query: Query<&mut Transform, With<Rival>>, time: Res<Time>
 fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     commands
         .spawn_bundle((
-            Transform::from_xyz(-30., 4., 2.).with_scale(Vec3::splat(0.25)),
+            Transform::from_xyz(-30., 4., 2.5).with_scale(Vec3::splat(0.25)),
             GlobalTransform::default(),
             CurrentRotationZ(0.),
             Rival,
@@ -307,15 +307,15 @@ fn start_screen_music(
 }
 
 fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
+    let pos = Vec3::new(0., 3., 0.);
+
     commands
         .spawn_bundle((
-            Transform::from_xyz(0., 1., 0.)
-                .with_scale(Vec3::splat(0.25))
-                .with_rotation(Quat::from_rotation_y(-std::f32::consts::PI)),
+            Transform::from_translation(pos).with_scale(Vec3::splat(0.25)),
             GlobalTransform::default(),
-            TargetPosition(Vec3::new(0., 1., 0.)),
+            TargetPosition(pos),
             CurrentRotationZ(0.),
-            CurrentRotationY(-std::f32::consts::PI),
+            CurrentRotationY(0.),
             Aabb {
                 center: Vec3::splat(0.),
                 half_extents: Vec3::splat(0.25),
@@ -647,7 +647,7 @@ fn setup(
 ) {
     // camera
     commands.spawn_bundle(PerspectiveCameraBundle {
-        transform: Transform::from_xyz(0., 5., 20.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(3.5, 5.8, 11.7).with_rotation(Quat::from_rotation_x(-0.211)),
         ..Default::default()
     });
 

@@ -48,9 +48,9 @@ fn start_screen(
 
     commands
         .spawn_bundle((
-            Transform::from_xyz(-5.4, 2.3, 4.5)
+            Transform::from_xyz(7.7, 4.0, -0.2)
                 .with_scale(Vec3::splat(2.5))
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.1, -0.6, -0.7)),
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
             GlobalTransform::default(),
             StartScreen,
         ))
@@ -66,7 +66,7 @@ fn start_screen(
                 position_type: PositionType::Absolute,
                 position: Rect {
                     bottom: Val::Px(0.),
-                    left: Val::Px(0.),
+                    right: Val::Px(0.),
                     ..Default::default()
                 },
                 size: Size::new(Val::Percent(50.0), Val::Percent(70.0)),
@@ -164,9 +164,9 @@ fn death_screen(
 
     commands
         .spawn_bundle((
-            Transform::from_xyz(-5.4, 2.3, 4.5)
+            Transform::from_xyz(7.7, 4.0, -0.2)
                 .with_scale(Vec3::splat(2.5))
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, 0.1, -0.6, -0.7)),
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
             GlobalTransform::default(),
             EndScreen,
         ))
@@ -182,7 +182,7 @@ fn death_screen(
                 position_type: PositionType::Absolute,
                 position: Rect {
                     bottom: Val::Px(0.),
-                    left: Val::Px(0.),
+                    right: Val::Px(0.),
                     ..Default::default()
                 },
                 size: Size::new(Val::Percent(50.0), Val::Percent(70.0)),
