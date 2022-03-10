@@ -10,7 +10,6 @@ Completed in ~2 days for Bevy Jam #1.
 - [ ] hero should bob up and down slightly on start screen
 - [ ] hero should bob up and down very slightly while cruising
 - [ ] add sfx / music mute buttons
-- [ ] add score thresholds (score 200 points to join flock as junior member and so on)
 - [ ] add some terrain so that it's more obvious we're moving
 - [ ] rival should do a loop around the obstacle and face towards hero on death
 - [ ] jazz up html

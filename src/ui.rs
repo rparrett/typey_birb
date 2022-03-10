@@ -1,6 +1,6 @@
 use bevy::{prelude::*, utils::HashSet};
 
-use crate::{typing::TypingTarget, AppState, FontAssets, GltfAssets};
+use crate::{typing::TypingTarget, AppState, FontAssets, GltfAssets, Score};
 pub struct UiPlugin;
 
 #[derive(Component)]
@@ -159,7 +159,18 @@ fn death_screen(
     mut commands: Commands,
     gltf_assets: Res<GltfAssets>,
     font_assets: Res<FontAssets>,
+    score: Res<Score>,
 ) {
+    let death_msg = if score.0 > 1000 {
+        "I... wha... wow!\nWhat am I even doing with my life?\nThe flock is yours, if you'll have us!"
+    } else if score.0 > 400 {
+        "That was a close one!\nWith moves like that, you'll\nfit in well here!"
+    } else if score.0 > 200 {
+        "Not bad, kid!\nThere may be room for you in the flock\nas an unpaid apprentice."
+    } else {
+        "Oh wow, ouch!\nToo bad you're stuck at Z = 0.0,\nthe path is a bit clearer a few units over."
+    };
+
     // rival
 
     commands
@@ -219,7 +230,7 @@ fn death_screen(
             },
             text: Text {
                 sections: vec![TextSection {
-                    value: "Oh wow, ouch!\nToo bad you're stuck at Z=0,\nthe path is a bit clearer a few units over.".into(),
+                    value: death_msg.into(),
                     style: TextStyle {
                         font: font_assets.main.clone(),
                         font_size: 40.,
