@@ -166,6 +166,9 @@ fn main() {
                 .with_system(start_screen_music),
         )
         .add_system_set(
+            SystemSet::on_update(AppState::StartScreen).with_system(start_screen_movement),
+        )
+        .add_system_set(
             SystemSet::on_enter(AppState::Playing)
                 .with_system(spawn_rival)
                 .with_system(game_music),
@@ -499,6 +502,17 @@ fn obstacle_movement(
         if transform.translation.x < -30. {
             commands.entity(entity).despawn_recursive();
         }
+    }
+}
+
+fn start_screen_movement(mut query: Query<(&mut Transform, &mut TargetPosition)>, time: Res<Time>) {
+    let speed = 1.0;
+    let magnitude = 0.15;
+
+    for (mut transform, mut target) in query.iter_mut() {
+        let floaty = (time.seconds_since_startup() as f32 * speed).sin() * magnitude;
+        transform.translation.y = 3. + floaty;
+        target.0 = transform.translation;
     }
 }
 

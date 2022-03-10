@@ -7,7 +7,6 @@ Completed in ~2 days for Bevy Jam #1.
 ## TODO
 
 - [X] just release the thing, we're out of time!
-- [ ] hero should bob up and down slightly on start screen
 - [ ] hero should bob up and down very slightly while cruising
 - [ ] add sfx / music mute buttons
 - [ ] add some terrain so that it's more obvious we're moving
