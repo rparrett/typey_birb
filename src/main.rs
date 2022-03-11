@@ -461,7 +461,7 @@ fn spawn_obstacle(
     .into();
 
     commands
-        .spawn_bundle((Transform::from_xyz(30., 0., 0.), GlobalTransform::default()))
+        .spawn_bundle((Transform::from_xyz(38., 0., 0.), GlobalTransform::default()))
         .with_children(|parent| {
             parent
                 .spawn()
@@ -672,7 +672,7 @@ fn setup(
     });
 
     // directional 'sun' light
-    const HALF_SIZE: f32 = 30.0;
+    const HALF_SIZE: f32 = 40.0;
     commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene
