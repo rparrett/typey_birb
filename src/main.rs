@@ -7,10 +7,11 @@ use bevy::{
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 #[cfg(feature = "inspector")]
 use bevy_inspector_egui::WorldInspectorPlugin;
-use rand::{thread_rng, Rng};
+use luck::NextGapBag;
 use util::collide_aabb;
 
 mod cylinder;
+mod luck;
 mod typing;
 mod ui;
 mod util;
@@ -121,6 +122,15 @@ impl Speed {
     }
 }
 
+const BIRB_START_Y: f32 = 3.;
+
+const BIRB_MIN_Y: f32 = 0.9;
+const BIRB_MAX_Y: f32 = 6.3;
+
+const GAP_SIZE: f32 = 2.;
+const GAP_START_MIN_Y: f32 = 0.5;
+const GAP_START_MAX_Y: f32 = 6.7 - GAP_SIZE;
+
 fn main() {
     let mut app = App::new();
 
@@ -155,6 +165,10 @@ fn main() {
         .init_resource::<Speed>()
         .init_resource::<DistanceToSpawn>()
         .init_resource::<ObstacleSpacing>()
+        .insert_resource(NextGapBag::new(
+            GAP_START_MIN_Y..GAP_START_MAX_Y,
+            BIRB_START_Y,
+        ))
         .add_event::<Action>();
 
     app.add_plugin(crate::typing::TypingPlugin)
@@ -304,7 +318,21 @@ fn start_screen_music(
 }
 
 fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
-    let pos = Vec3::new(0., 3., 0.);
+    let pos = Vec3::new(0., BIRB_START_Y, 0.);
+
+    // Use a slightly more forgiving hitbox than the actual
+    // computed Aabb.
+    //
+    // There's a tradeoff here between head scraping and
+    // phantom belly collisions.
+    //
+    // Let's just live with that and not get too fancy with
+    // and a flappy bird clone.
+
+    let aabb = Aabb {
+        center: Vec3::splat(0.),
+        half_extents: Vec3::new(0.2, 0.3, 0.25),
+    };
 
     commands
         .spawn_bundle((
@@ -312,10 +340,7 @@ fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
             GlobalTransform::default(),
             TargetPosition(pos),
             CurrentRotationZ(0.),
-            Aabb {
-                center: Vec3::splat(0.),
-                half_extents: Vec3::splat(0.25),
-            },
+            aabb,
             Birb,
         ))
         .with_children(|parent| {
@@ -374,6 +399,7 @@ fn spawn_obstacle(
     spacing: Res<ObstacleSpacing>,
     mut distance: ResMut<DistanceToSpawn>,
     mut speed: ResMut<Speed>,
+    mut bag: ResMut<NextGapBag>,
 ) {
     if distance.0 > 0. {
         return;
@@ -383,10 +409,7 @@ fn spawn_obstacle(
 
     speed.increase(0.1);
 
-    let mut rng = thread_rng();
-
-    let gap_start = rng.gen_range(0.1..4.6);
-    let gap_size = 2.;
+    let gap_start = bag.next().unwrap();
 
     let flange_height = 0.4;
     let flange_radius = 0.8;
@@ -403,7 +426,7 @@ fn spawn_obstacle(
     );
     let bottom_y = bottom_height / 2.;
 
-    let top_height = 10. - gap_start - gap_size;
+    let top_height = 10. - gap_start - GAP_SIZE;
     let top_cylinder = meshes.add(
         cylinder::Cylinder {
             radius: 0.75,
@@ -413,7 +436,7 @@ fn spawn_obstacle(
         }
         .into(),
     );
-    let top_y = gap_start + gap_size + top_height / 2.;
+    let top_y = gap_start + GAP_SIZE + top_height / 2.;
 
     let flange = meshes.add(
         cylinder::Cylinder {
@@ -425,13 +448,13 @@ fn spawn_obstacle(
         .into(),
     );
     let bottom_flange_y = gap_start - flange_height / 2.;
-    let top_flange_y = gap_start + gap_size + flange_height / 2.;
+    let top_flange_y = gap_start + GAP_SIZE + flange_height / 2.;
 
     let middle: Mesh = shape::Box {
         min_x: -0.1,
         max_x: 1.0,
         min_y: gap_start,
-        max_y: gap_start + gap_size,
+        max_y: gap_start + GAP_SIZE,
         min_z: -0.5,
         max_z: 0.5,
     }
@@ -600,16 +623,13 @@ fn update_target_position(
     audio_assets: Res<AudioAssets>,
     audio: Res<Audio>,
 ) {
-    let min = 0.5;
-    let max = 6.5;
-
     for e in events.iter() {
         match e {
             Action::BirbUp => {
                 for mut target in query.iter_mut() {
                     target.0.y += 0.25;
-                    if target.0.y > max {
-                        target.0.y = max;
+                    if target.0.y > BIRB_MAX_Y {
+                        target.0.y = BIRB_MAX_Y;
                         audio.play(audio_assets.bump.clone());
                     } else {
                         audio.play(audio_assets.flap.clone());
@@ -619,8 +639,8 @@ fn update_target_position(
             Action::BirbDown => {
                 for mut target in query.iter_mut() {
                     target.0.y -= 0.25;
-                    if target.0.y < min {
-                        target.0.y = min;
+                    if target.0.y < BIRB_MIN_Y {
+                        target.0.y = BIRB_MIN_Y;
                         audio.play(audio_assets.bump.clone());
                     } else {
                         audio.play(audio_assets.flap.clone());
