@@ -49,7 +49,7 @@ impl NextGapBag {
         while contents
             .iter()
             .take(2)
-            .any(|k| matches!(k, NextGapKind::Large) || matches!(k, NextGapKind::VeryLarge))
+            .any(|k| matches!(k, NextGapKind::Large | NextGapKind::VeryLarge))
         {
             contents.shuffle(&mut rng);
         }
