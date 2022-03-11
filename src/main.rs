@@ -55,6 +55,7 @@ enum AppState {
     Loading,
     StartScreen,
     Playing,
+    #[cfg(feature = "inspector")]
     Paused,
     EndScreen,
 }
@@ -199,6 +200,7 @@ fn main() {
         .run();
 }
 
+#[cfg(feature = "inspector")]
 fn pause(mut keyboard: ResMut<Input<KeyCode>>, mut state: ResMut<State<AppState>>) {
     if keyboard.just_pressed(KeyCode::Escape) {
         match state.current() {
