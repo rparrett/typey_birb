@@ -182,8 +182,7 @@ fn main() {
                 .with_system(spawn_obstacle)
                 .with_system(update_target_position)
                 .with_system(update_score)
-                .with_system(bad_flap_sound)
-                .with_system(pause),
+                .with_system(bad_flap_sound),
         )
         .add_system_set(
             SystemSet::on_update(AppState::StartScreen)
