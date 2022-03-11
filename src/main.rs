@@ -112,7 +112,7 @@ impl Default for Speed {
     fn default() -> Self {
         Self {
             current: 2.,
-            max: 5.,
+            max: 4.,
         }
     }
 }
