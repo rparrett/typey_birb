@@ -11,7 +11,7 @@ inspector = ["bevy-inspector-egui"]
 [dependencies]
 bevy = { version = "0.6", features = ["jpeg", "vorbis"] }
 rand = "0.8"
-bevy-inspector-egui = { version = "0.8", optional = true }
+bevy-inspector-egui = { version = "0.9", optional = true }
 bevy_asset_loader = "0.9"
 
 [patch.crates-io]
