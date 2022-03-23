@@ -11,6 +11,7 @@ use luck::NextGapBag;
 use util::collide_aabb;
 
 mod cylinder;
+mod ground;
 mod luck;
 mod typing;
 mod ui;
@@ -87,6 +88,8 @@ pub enum Action {
 #[derive(Component)]
 struct Obstacle;
 #[derive(Component)]
+struct Ground;
+#[derive(Component)]
 struct ScoreCollider;
 #[derive(Component)]
 struct ObstacleCollider;
@@ -104,6 +107,9 @@ impl Default for ObstacleSpacing {
         Self(12.)
     }
 }
+#[derive(Default)]
+struct DistanceToSpawnGround(f32);
+
 struct Speed {
     current: f32,
     max: f32,
@@ -130,6 +136,11 @@ const BIRB_MAX_Y: f32 = 6.3;
 const GAP_SIZE: f32 = 2.;
 const GAP_START_MIN_Y: f32 = 0.5;
 const GAP_START_MAX_Y: f32 = 6.7 - GAP_SIZE;
+
+const GROUND_LENGTH: f32 = 60.;
+const GROUND_WIDTH: f32 = 40.;
+const GROUND_VERTICES_X: u32 = 30;
+const GROUND_VERTICES_Z: u32 = 20;
 
 fn main() {
     let mut app = App::new();
@@ -164,6 +175,7 @@ fn main() {
     app.init_resource::<Score>()
         .init_resource::<Speed>()
         .init_resource::<DistanceToSpawn>()
+        .init_resource::<DistanceToSpawnGround>()
         .init_resource::<ObstacleSpacing>()
         .insert_resource(NextGapBag::new(
             GAP_START_MIN_Y..GAP_START_MAX_Y,
@@ -194,7 +206,9 @@ fn main() {
                 .with_system(rival_movement)
                 .with_system(collision)
                 .with_system(obstacle_movement)
+                .with_system(ground_movement.label("ground_movement"))
                 .with_system(spawn_obstacle)
+                .with_system(spawn_ground.after("ground_movement"))
                 .with_system(update_target_position)
                 .with_system(update_score)
                 .with_system(bad_flap_sound),
@@ -238,6 +252,7 @@ fn reset(
     commands.insert_resource(Score::default());
     commands.insert_resource(Speed::default());
     commands.insert_resource(DistanceToSpawn::default());
+    commands.insert_resource(DistanceToSpawnGround::default());
     commands.insert_resource(ObstacleSpacing::default());
 
     for entity in query.iter() {
@@ -510,6 +525,39 @@ fn spawn_obstacle(
         .insert(Obstacle);
 }
 
+fn spawn_ground(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut distance: ResMut<DistanceToSpawnGround>,
+    query: Query<&Transform, With<Ground>>,
+) {
+    if distance.0 > 0. {
+        return;
+    }
+
+    let max_x = query
+        .iter()
+        .max_by(|a, b| a.translation.x.partial_cmp(&b.translation.x).unwrap())
+        .unwrap()
+        .translation
+        .x;
+
+    distance.0 = GROUND_LENGTH;
+
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(ground::ground(
+                Vec2::new(GROUND_LENGTH, GROUND_WIDTH),
+                UVec2::new(GROUND_VERTICES_X, GROUND_VERTICES_Z),
+            )),
+            transform: Transform::from_xyz(max_x + GROUND_LENGTH, 0.1, 0.),
+            material: materials.add(Color::rgb(0.63, 0.96, 0.26).into()),
+            ..Default::default()
+        })
+        .insert(Ground);
+}
+
 fn obstacle_movement(
     mut commands: Commands,
     mut query: Query<(Entity, &mut Transform), With<Obstacle>>,
@@ -524,6 +572,25 @@ fn obstacle_movement(
     for (entity, mut transform) in query.iter_mut() {
         transform.translation.x -= delta;
         if transform.translation.x < -30. {
+            commands.entity(entity).despawn_recursive();
+        }
+    }
+}
+
+fn ground_movement(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Transform), With<Ground>>,
+    time: Res<Time>,
+    mut distance: ResMut<DistanceToSpawnGround>,
+    speed: Res<Speed>,
+) {
+    let delta = time.delta_seconds() * speed.current;
+
+    distance.0 -= delta;
+
+    for (entity, mut transform) in query.iter_mut() {
+        transform.translation.x -= delta;
+        if transform.translation.x < -60. {
             commands.entity(entity).despawn_recursive();
         }
     }
@@ -664,12 +731,17 @@ fn setup(
     });
 
     // ground
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Box::new(100., 1., 40.))),
-        transform: Transform::from_xyz(0., -0.5, 0.),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-        ..Default::default()
-    });
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(ground::ground(
+                Vec2::new(GROUND_LENGTH, GROUND_WIDTH),
+                UVec2::new(GROUND_VERTICES_X, GROUND_VERTICES_Z),
+            )),
+            transform: Transform::from_xyz(0., 0.1, 0.),
+            material: materials.add(Color::rgb(0.63, 0.96, 0.26).into()),
+            ..Default::default()
+        })
+        .insert(Ground);
 
     // directional 'sun' light
     const HALF_SIZE: f32 = 40.0;
