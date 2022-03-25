@@ -6,6 +6,8 @@ use bevy::{
 };
 use rand::{thread_rng, Rng};
 
+use crate::{AppState, Speed};
+
 pub const GROUND_LENGTH: f32 = 60.;
 const GROUND_WIDTH: f32 = 40.;
 const GROUND_VERTICES_X: u32 = 30;
@@ -40,6 +42,65 @@ impl GroundBundle {
             ground: Ground,
         }
     }
+}
+
+pub struct GroundPlugin;
+
+impl Plugin for GroundPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system_set(
+            SystemSet::on_update(AppState::Playing)
+                .with_system(ground_movement.label("ground_movement"))
+                .with_system(spawn_ground.after("ground_movement")),
+        )
+        .add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup));
+    }
+}
+
+fn ground_movement(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Transform), With<Ground>>,
+    time: Res<Time>,
+    speed: Res<Speed>,
+) {
+    let delta = time.delta_seconds() * speed.current;
+
+    for (entity, mut transform) in query.iter_mut() {
+        transform.translation.x -= delta;
+        if transform.translation.x < -60. {
+            commands.entity(entity).despawn_recursive();
+        }
+    }
+}
+
+fn spawn_ground(
+    mut commands: Commands,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
+    query: Query<&Transform, With<Ground>>,
+) {
+    // keep two ground chunks alive at all times
+
+    if query.iter().count() >= 2 {
+        return;
+    }
+
+    let max_x = query
+        .iter()
+        .max_by(|a, b| a.translation.x.partial_cmp(&b.translation.x).unwrap())
+        .unwrap()
+        .translation
+        .x;
+
+    commands.spawn_bundle(GroundBundle::new(max_x + GROUND_LENGTH, meshes, materials));
+}
+
+fn setup(
+    mut commands: Commands,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
+) {
+    commands.spawn_bundle(GroundBundle::new(0., meshes, materials));
 }
 
 pub fn ground_mesh(size: Vec2, num_vertices: UVec2) -> Mesh {

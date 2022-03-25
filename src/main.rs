@@ -7,7 +7,6 @@ use bevy::{
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 #[cfg(feature = "inspector")]
 use bevy_inspector_egui::WorldInspectorPlugin;
-use ground::{Ground, GroundBundle, GROUND_LENGTH};
 use luck::NextGapBag;
 use util::collide_aabb;
 
@@ -175,7 +174,8 @@ fn main() {
         .add_event::<Action>();
 
     app.add_plugin(crate::typing::TypingPlugin)
-        .add_plugin(crate::ui::UiPlugin);
+        .add_plugin(crate::ui::UiPlugin)
+        .add_plugin(crate::ground::GroundPlugin);
 
     app.add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup))
         .add_system_set(
@@ -197,9 +197,7 @@ fn main() {
                 .with_system(rival_movement)
                 .with_system(collision)
                 .with_system(obstacle_movement)
-                .with_system(ground_movement.label("ground_movement"))
                 .with_system(spawn_obstacle)
-                .with_system(spawn_ground.after("ground_movement"))
                 .with_system(update_target_position)
                 .with_system(update_score)
                 .with_system(bad_flap_sound),
@@ -515,28 +513,6 @@ fn spawn_obstacle(
         .insert(Obstacle);
 }
 
-fn spawn_ground(
-    mut commands: Commands,
-    meshes: ResMut<Assets<Mesh>>,
-    materials: ResMut<Assets<StandardMaterial>>,
-    query: Query<&Transform, With<Ground>>,
-) {
-    // keep two ground chunks spawned at all times
-
-    if query.iter().count() >= 2 {
-        return;
-    }
-
-    let max_x = query
-        .iter()
-        .max_by(|a, b| a.translation.x.partial_cmp(&b.translation.x).unwrap())
-        .unwrap()
-        .translation
-        .x;
-
-    commands.spawn_bundle(GroundBundle::new(max_x + GROUND_LENGTH, meshes, materials));
-}
-
 fn obstacle_movement(
     mut commands: Commands,
     mut query: Query<(Entity, &mut Transform), With<Obstacle>>,
@@ -551,22 +527,6 @@ fn obstacle_movement(
     for (entity, mut transform) in query.iter_mut() {
         transform.translation.x -= delta;
         if transform.translation.x < -30. {
-            commands.entity(entity).despawn_recursive();
-        }
-    }
-}
-
-fn ground_movement(
-    mut commands: Commands,
-    mut query: Query<(Entity, &mut Transform), With<Ground>>,
-    time: Res<Time>,
-    speed: Res<Speed>,
-) {
-    let delta = time.delta_seconds() * speed.current;
-
-    for (entity, mut transform) in query.iter_mut() {
-        transform.translation.x -= delta;
-        if transform.translation.x < -60. {
             commands.entity(entity).despawn_recursive();
         }
     }
@@ -695,19 +655,12 @@ fn update_target_position(
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    meshes: ResMut<Assets<Mesh>>,
-    materials: ResMut<Assets<StandardMaterial>>,
-) {
+fn setup(mut commands: Commands) {
     // camera
     commands.spawn_bundle(PerspectiveCameraBundle {
         transform: Transform::from_xyz(4.5, 5.8, 11.7).with_rotation(Quat::from_rotation_x(-0.211)),
         ..Default::default()
     });
-
-    // ground
-    commands.spawn_bundle(GroundBundle::new(0., meshes, materials));
 
     // directional 'sun' light
     const HALF_SIZE: f32 = 40.0;
