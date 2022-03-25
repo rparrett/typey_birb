@@ -107,8 +107,6 @@ impl Default for ObstacleSpacing {
         Self(12.)
     }
 }
-#[derive(Default)]
-struct DistanceToSpawnGround(f32);
 
 struct Speed {
     current: f32,
@@ -175,7 +173,6 @@ fn main() {
     app.init_resource::<Score>()
         .init_resource::<Speed>()
         .init_resource::<DistanceToSpawn>()
-        .init_resource::<DistanceToSpawnGround>()
         .init_resource::<ObstacleSpacing>()
         .insert_resource(NextGapBag::new(
             GAP_START_MIN_Y..GAP_START_MAX_Y,
@@ -252,7 +249,6 @@ fn reset(
     commands.insert_resource(Score::default());
     commands.insert_resource(Speed::default());
     commands.insert_resource(DistanceToSpawn::default());
-    commands.insert_resource(DistanceToSpawnGround::default());
     commands.insert_resource(ObstacleSpacing::default());
 
     for entity in query.iter() {
@@ -529,10 +525,11 @@ fn spawn_ground(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut distance: ResMut<DistanceToSpawnGround>,
     query: Query<&Transform, With<Ground>>,
 ) {
-    if distance.0 > 0. {
+    // keep two ground chunks spawned at all times
+
+    if query.iter().count() >= 2 {
         return;
     }
 
@@ -542,8 +539,6 @@ fn spawn_ground(
         .unwrap()
         .translation
         .x;
-
-    distance.0 = GROUND_LENGTH;
 
     commands
         .spawn_bundle(PbrBundle {
@@ -581,12 +576,9 @@ fn ground_movement(
     mut commands: Commands,
     mut query: Query<(Entity, &mut Transform), With<Ground>>,
     time: Res<Time>,
-    mut distance: ResMut<DistanceToSpawnGround>,
     speed: Res<Speed>,
 ) {
     let delta = time.delta_seconds() * speed.current;
-
-    distance.0 -= delta;
 
     for (entity, mut transform) in query.iter_mut() {
         transform.translation.x -= delta;
