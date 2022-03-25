@@ -6,7 +6,43 @@ use bevy::{
 };
 use rand::{thread_rng, Rng};
 
-pub fn ground(size: Vec2, num_vertices: UVec2) -> Mesh {
+pub const GROUND_LENGTH: f32 = 60.;
+const GROUND_WIDTH: f32 = 40.;
+const GROUND_VERTICES_X: u32 = 30;
+const GROUND_VERTICES_Z: u32 = 20;
+
+#[derive(Component)]
+pub struct Ground;
+
+#[derive(Bundle)]
+pub struct GroundBundle {
+    #[bundle]
+    pbr: PbrBundle,
+    ground: Ground,
+}
+
+impl GroundBundle {
+    pub fn new(
+        x: f32,
+        mut meshes: ResMut<Assets<Mesh>>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
+    ) -> GroundBundle {
+        Self {
+            pbr: PbrBundle {
+                mesh: meshes.add(ground_mesh(
+                    Vec2::new(GROUND_LENGTH, GROUND_WIDTH),
+                    UVec2::new(GROUND_VERTICES_X, GROUND_VERTICES_Z),
+                )),
+                transform: Transform::from_xyz(x, 0.1, 0.),
+                material: materials.add(Color::rgb(0.63, 0.96, 0.26).into()),
+                ..Default::default()
+            },
+            ground: Ground,
+        }
+    }
+}
+
+pub fn ground_mesh(size: Vec2, num_vertices: UVec2) -> Mesh {
     let num_quads = num_vertices - UVec2::splat(1);
     let offset = size / -2.;
 

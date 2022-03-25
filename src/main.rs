@@ -7,6 +7,7 @@ use bevy::{
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 #[cfg(feature = "inspector")]
 use bevy_inspector_egui::WorldInspectorPlugin;
+use ground::{Ground, GroundBundle, GROUND_LENGTH};
 use luck::NextGapBag;
 use util::collide_aabb;
 
@@ -88,8 +89,6 @@ pub enum Action {
 #[derive(Component)]
 struct Obstacle;
 #[derive(Component)]
-struct Ground;
-#[derive(Component)]
 struct ScoreCollider;
 #[derive(Component)]
 struct ObstacleCollider;
@@ -134,11 +133,6 @@ const BIRB_MAX_Y: f32 = 6.3;
 const GAP_SIZE: f32 = 2.;
 const GAP_START_MIN_Y: f32 = 0.5;
 const GAP_START_MAX_Y: f32 = 6.7 - GAP_SIZE;
-
-const GROUND_LENGTH: f32 = 60.;
-const GROUND_WIDTH: f32 = 40.;
-const GROUND_VERTICES_X: u32 = 30;
-const GROUND_VERTICES_Z: u32 = 20;
 
 fn main() {
     let mut app = App::new();
@@ -523,8 +517,8 @@ fn spawn_obstacle(
 
 fn spawn_ground(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
     query: Query<&Transform, With<Ground>>,
 ) {
     // keep two ground chunks spawned at all times
@@ -540,17 +534,7 @@ fn spawn_ground(
         .translation
         .x;
 
-    commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(ground::ground(
-                Vec2::new(GROUND_LENGTH, GROUND_WIDTH),
-                UVec2::new(GROUND_VERTICES_X, GROUND_VERTICES_Z),
-            )),
-            transform: Transform::from_xyz(max_x + GROUND_LENGTH, 0.1, 0.),
-            material: materials.add(Color::rgb(0.63, 0.96, 0.26).into()),
-            ..Default::default()
-        })
-        .insert(Ground);
+    commands.spawn_bundle(GroundBundle::new(max_x + GROUND_LENGTH, meshes, materials));
 }
 
 fn obstacle_movement(
@@ -713,8 +697,8 @@ fn update_target_position(
 
 fn setup(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // camera
     commands.spawn_bundle(PerspectiveCameraBundle {
@@ -723,17 +707,7 @@ fn setup(
     });
 
     // ground
-    commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(ground::ground(
-                Vec2::new(GROUND_LENGTH, GROUND_WIDTH),
-                UVec2::new(GROUND_VERTICES_X, GROUND_VERTICES_Z),
-            )),
-            transform: Transform::from_xyz(0., 0.1, 0.),
-            material: materials.add(Color::rgb(0.63, 0.96, 0.26).into()),
-            ..Default::default()
-        })
-        .insert(Ground);
+    commands.spawn_bundle(GroundBundle::new(0., meshes, materials));
 
     // directional 'sun' light
     const HALF_SIZE: f32 = 40.0;
