@@ -4,6 +4,8 @@ Completed in ~2 days for Bevy Jam #1.
 
 `v0.1.3` is the submitted version, but development is unlikely to continue.
 
+[Play on itch.io](https://euclidean-whale.itch.io/typey-birb)
+
 ## TODO
 
 - [X] just release the thing, we're out of time!
