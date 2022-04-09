@@ -9,10 +9,7 @@ edition = "2021"
 inspector = ["bevy-inspector-egui"]
 
 [dependencies]
-bevy = { version = "0.6", features = ["jpeg", "vorbis"] }
+bevy = { version = "0.7", features = ["jpeg", "vorbis"] }
 rand = "0.8"
-bevy-inspector-egui = { version = "0.9", optional = true }
-bevy_asset_loader = "0.9"
-
-[patch.crates-io]
-bevy = { git = "https://github.com/rparrett/bevy", branch="bevyjam1" }
+bevy-inspector-egui = { version = "0.10", optional = true }
+bevy_asset_loader = "0.10"

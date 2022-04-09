@@ -1,6 +1,7 @@
 use bevy::{
     audio::AudioSink,
     log::{Level, LogSettings},
+    math::Vec3A,
     prelude::*,
     render::primitives::Aabb,
 };
@@ -300,7 +301,8 @@ fn game_music(
             sink.pause();
         }
     }
-    let handle = audio_sinks.get_handle(audio.play_in_loop(audio_assets.game.clone()));
+    let handle = audio_sinks
+        .get_handle(audio.play_with_settings(audio_assets.game.clone(), PlaybackSettings::LOOP));
     commands.insert_resource(MusicController(handle));
 }
 
@@ -316,7 +318,8 @@ fn start_screen_music(
             sink.pause();
         }
     }
-    let handle = audio_sinks.get_handle(audio.play_in_loop(audio_assets.menu.clone()));
+    let handle = audio_sinks
+        .get_handle(audio.play_with_settings(audio_assets.menu.clone(), PlaybackSettings::LOOP));
     commands.insert_resource(MusicController(handle));
 }
 
@@ -333,8 +336,8 @@ fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     // and a flappy bird clone.
 
     let aabb = Aabb {
-        center: Vec3::splat(0.),
-        half_extents: Vec3::new(0.2, 0.3, 0.25),
+        center: Vec3A::splat(0.),
+        half_extents: Vec3A::new(0.2, 0.3, 0.25),
     };
 
     commands
@@ -366,11 +369,11 @@ fn collision(
 ) {
     let (birb, transform) = birb_query.single();
     let mut birb = birb.clone();
-    birb.center += transform.translation;
+    birb.center += Vec3A::from(transform.translation);
 
     for (score_aabb, transform, entity) in score_collider_query.iter() {
         let mut score_aabb = score_aabb.clone();
-        score_aabb.center += transform.translation;
+        score_aabb.center += Vec3A::from(transform.translation);
 
         if collide_aabb(&score_aabb, &birb) {
             commands.entity(entity).insert(Used);
@@ -381,7 +384,7 @@ fn collision(
     }
     for (obstacle_aabb, transform) in obstacle_collider_query.iter() {
         let mut obstacle_aabb = obstacle_aabb.clone();
-        obstacle_aabb.center += transform.translation;
+        obstacle_aabb.center += Vec3A::from(transform.translation);
 
         if collide_aabb(&obstacle_aabb, &birb) {
             state.set(AppState::EndScreen).unwrap();
