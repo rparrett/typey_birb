@@ -1,3 +1,5 @@
+#![allow(clippy::forget_non_drop)] // https://github.com/bevyengine/bevy/issues/4601
+
 use bevy::{
     audio::AudioSink,
     log::{Level, LogSettings},
