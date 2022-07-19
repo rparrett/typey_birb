@@ -50,16 +50,14 @@ fn start_screen(
     // rival
 
     commands
-        .spawn_bundle((
-            Transform::from_xyz(8.4, 4.0, -0.2)
+        .spawn_bundle(SceneBundle {
+            scene: gltf_assets.birb_gold.clone(),
+            transform: Transform::from_xyz(8.4, 4.0, -0.2)
                 .with_scale(Vec3::splat(2.5))
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
-            GlobalTransform::default(),
-            StartScreen,
-        ))
-        .with_children(|parent| {
-            parent.spawn_scene(gltf_assets.birb_gold.clone());
-        });
+            ..default()
+        })
+        .insert(StartScreen);
 
     // text
 
@@ -67,7 +65,7 @@ fn start_screen(
         .spawn_bundle(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
-                position: Rect {
+                position: UiRect {
                     bottom: Val::Px(0.),
                     right: Val::Px(0.),
                     ..Default::default()
@@ -91,7 +89,7 @@ fn start_screen(
                 align_items: AlignItems::FlexStart,
                 justify_content: JustifyContent::SpaceBetween,
                 flex_direction: FlexDirection::ColumnReverse,
-                padding: Rect::all(Val::Px(10.0)),
+                padding: UiRect::all(Val::Px(10.0)),
                 ..Default::default()
             },
             color: Color::BLACK.into(),
@@ -174,16 +172,14 @@ fn death_screen(
     // rival
 
     commands
-        .spawn_bundle((
-            Transform::from_xyz(8.4, 4.0, -0.2)
+        .spawn_bundle(SceneBundle {
+            scene: gltf_assets.birb_gold.clone(),
+            transform: Transform::from_xyz(8.4, 4.0, -0.2)
                 .with_scale(Vec3::splat(2.5))
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
-            GlobalTransform::default(),
-            EndScreen,
-        ))
-        .with_children(|parent| {
-            parent.spawn_scene(gltf_assets.birb_gold.clone());
-        });
+            ..default()
+        })
+        .insert(EndScreen);
 
     // text
 
@@ -191,7 +187,7 @@ fn death_screen(
         .spawn_bundle(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
-                position: Rect {
+                position: UiRect {
                     bottom: Val::Px(0.),
                     right: Val::Px(0.),
                     ..Default::default()
@@ -215,7 +211,7 @@ fn death_screen(
                 align_items: AlignItems::FlexStart,
                 justify_content: JustifyContent::SpaceBetween,
                 flex_direction: FlexDirection::ColumnReverse,
-                padding: Rect::all(Val::Px(10.0)),
+                padding: UiRect::all(Val::Px(10.0)),
                 ..Default::default()
             },
             color: Color::BLACK.into(),
@@ -302,8 +298,6 @@ fn update_targets(
 }
 
 fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Res<FontAssets>) {
-    commands.spawn_bundle(UiCameraBundle::default());
-
     // root node
     let root = commands
         .spawn_bundle(NodeBundle {
@@ -324,7 +318,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                 size: Size::new(Val::Percent(100.0), Val::Px(50.)),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
-                padding: Rect {
+                padding: UiRect {
                     bottom: Val::Px(5.),
                     ..Default::default()
                 },
@@ -344,7 +338,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
     let toptext = commands
         .spawn_bundle(TextBundle {
             style: Style {
-                margin: Rect::all(Val::Px(5.0)),
+                margin: UiRect::all(Val::Px(5.0)),
                 ..Default::default()
             },
             text: Text {
@@ -382,7 +376,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                 size: Size::new(Val::Percent(100.0), Val::Px(50.)),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
-                padding: Rect {
+                padding: UiRect {
                     bottom: Val::Px(5.),
                     ..Default::default()
                 },
@@ -397,7 +391,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
     let bottomtext = commands
         .spawn_bundle(TextBundle {
             style: Style {
-                margin: Rect::all(Val::Px(5.0)),
+                margin: UiRect::all(Val::Px(5.0)),
                 ..Default::default()
             },
             text: Text {
@@ -433,12 +427,12 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
         .spawn_bundle(TextBundle {
             style: Style {
                 position_type: PositionType::Absolute,
-                position: Rect {
+                position: UiRect {
                     top: Val::Px(3.0),
                     left: Val::Px(10.0),
                     ..Default::default()
                 },
-                padding: Rect::all(Val::Px(5.0)),
+                padding: UiRect::all(Val::Px(5.0)),
                 ..Default::default()
             },
             text: Text {
