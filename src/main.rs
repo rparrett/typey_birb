@@ -7,7 +7,7 @@ use bevy::{
     prelude::*,
     render::primitives::Aabb,
 };
-use bevy_asset_loader::{AssetCollection, AssetLoader};
+use bevy_asset_loader::prelude::*;
 #[cfg(feature = "inspector")]
 use bevy_inspector_egui::WorldInspectorPlugin;
 use luck::NextGapBag;
@@ -139,12 +139,13 @@ const GAP_START_MAX_Y: f32 = 6.7 - GAP_SIZE;
 fn main() {
     let mut app = App::new();
 
-    AssetLoader::new(AppState::Loading)
-        .continue_to_state(AppState::StartScreen)
-        .with_collection::<GltfAssets>()
-        .with_collection::<FontAssets>()
-        .with_collection::<AudioAssets>()
-        .build(&mut app);
+    app.add_loading_state(
+        LoadingState::new(AppState::Loading)
+            .continue_to_state(AppState::StartScreen)
+            .with_collection::<GltfAssets>()
+            .with_collection::<FontAssets>()
+            .with_collection::<AudioAssets>(),
+    );
 
     app.insert_resource(WindowDescriptor {
         title: "Typey Birb".into(),
@@ -271,11 +272,16 @@ fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         .spawn_bundle((
             Transform::from_xyz(-10., 4., 2.5).with_scale(Vec3::splat(0.25)),
             GlobalTransform::default(),
+            Visibility::default(),
+            ComputedVisibility::default(),
             CurrentRotationZ(0.),
             Rival,
         ))
         .with_children(|parent| {
-            parent.spawn_scene(gltf_assets.birb_gold.clone());
+            parent.spawn_bundle(SceneBundle {
+                scene: gltf_assets.birb_gold.clone(),
+                ..default()
+            });
         });
 }
 
@@ -346,13 +352,18 @@ fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         .spawn_bundle((
             Transform::from_translation(pos).with_scale(Vec3::splat(0.25)),
             GlobalTransform::default(),
+            Visibility::default(),
+            ComputedVisibility::default(),
             TargetPosition(pos),
             CurrentRotationZ(0.),
             aabb,
             Birb,
         ))
         .with_children(|parent| {
-            parent.spawn_scene(gltf_assets.birb.clone());
+            parent.spawn_bundle(SceneBundle {
+                scene: gltf_assets.birb.clone(),
+                ..default()
+            });
         });
 }
 
@@ -375,7 +386,7 @@ fn collision(
 
     for (score_aabb, transform, entity) in score_collider_query.iter() {
         let mut score_aabb = score_aabb.clone();
-        score_aabb.center += Vec3A::from(transform.translation);
+        score_aabb.center += Vec3A::from(transform.translation());
 
         if collide_aabb(&score_aabb, &birb) {
             commands.entity(entity).insert(Used);
@@ -386,7 +397,7 @@ fn collision(
     }
     for (obstacle_aabb, transform) in obstacle_collider_query.iter() {
         let mut obstacle_aabb = obstacle_aabb.clone();
-        obstacle_aabb.center += Vec3A::from(transform.translation);
+        obstacle_aabb.center += Vec3A::from(transform.translation());
 
         if collide_aabb(&obstacle_aabb, &birb) {
             state.set(AppState::EndScreen).unwrap();
@@ -469,7 +480,12 @@ fn spawn_obstacle(
     .into();
 
     commands
-        .spawn_bundle((Transform::from_xyz(38., 0., 0.), GlobalTransform::default()))
+        .spawn_bundle((
+            Transform::from_xyz(38., 0., 0.),
+            GlobalTransform::default(),
+            Visibility::default(),
+            ComputedVisibility::default(),
+        ))
         .with_children(|parent| {
             parent
                 .spawn()
@@ -662,7 +678,7 @@ fn update_target_position(
 
 fn setup(mut commands: Commands) {
     // camera
-    commands.spawn_bundle(PerspectiveCameraBundle {
+    commands.spawn_bundle(Camera3dBundle {
         transform: Transform::from_xyz(4.5, 5.8, 11.7).with_rotation(Quat::from_rotation_x(-0.211)),
         ..Default::default()
     });
