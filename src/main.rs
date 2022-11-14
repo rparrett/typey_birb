@@ -1,8 +1,9 @@
-#![allow(clippy::forget_non_drop)] // https://github.com/bevyengine/bevy/issues/4601
+#![allow(clippy::type_complexity)]
+#![allow(clippy::too_many_arguments)]
 
 use bevy::{
     audio::AudioSink,
-    log::{Level, LogSettings},
+    log::{Level, LogPlugin},
     math::Vec3A,
     prelude::*,
     render::primitives::Aabb,
@@ -53,6 +54,7 @@ struct AudioAssets {
     bump: Handle<AudioSource>,
 }
 
+#[derive(Resource)]
 struct MusicController(Handle<AudioSink>);
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -98,10 +100,11 @@ struct ObstacleCollider;
 struct Used;
 
 // Resources
-#[derive(Default)]
+#[derive(Resource, Default)]
 struct Score(u32);
-#[derive(Default)]
+#[derive(Resource, Default)]
 struct DistanceToSpawn(f32);
+#[derive(Resource)]
 struct ObstacleSpacing(f32);
 impl Default for ObstacleSpacing {
     fn default() -> Self {
@@ -109,6 +112,7 @@ impl Default for ObstacleSpacing {
     }
 }
 
+#[derive(Resource)]
 struct Speed {
     current: f32,
     max: f32,
@@ -147,16 +151,22 @@ fn main() {
             .with_collection::<AudioAssets>(),
     );
 
-    app.insert_resource(WindowDescriptor {
-        title: "Typey Birb".into(),
-        ..Default::default()
-    })
-    .insert_resource(ClearColor(Color::rgb_u8(177, 214, 222)))
-    .insert_resource(LogSettings {
-        level: Level::INFO,
-        ..Default::default()
-    })
-    .add_plugins(DefaultPlugins);
+    app.insert_resource(ClearColor(Color::rgb_u8(177, 214, 222)));
+
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                window: WindowDescriptor {
+                    title: "Typey Birb".into(),
+                    ..Default::default()
+                },
+                ..default()
+            })
+            .set(LogPlugin {
+                level: Level::INFO,
+                ..Default::default()
+            }),
+    );
 
     #[cfg(feature = "inspector")]
     {
@@ -260,22 +270,23 @@ fn rival_movement(mut query: Query<&mut Transform, With<Rival>>, time: Res<Time>
             transform.translation.x += speed * time.delta_seconds();
         }
 
-        let floaty = (time.seconds_since_startup() as f32).sin();
+        let floaty = time.elapsed_seconds().sin();
         transform.translation.y = 4. + floaty;
 
-        transform.rotation = Quat::from_rotation_z((time.seconds_since_startup() as f32).cos() / 4.)
+        transform.rotation = Quat::from_rotation_z(time.elapsed_seconds().cos() / 4.)
     }
 }
 
 fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
-    commands
-        .spawn_bundle(SceneBundle {
+    commands.spawn((
+        SceneBundle {
             scene: gltf_assets.birb_gold.clone(),
             transform: Transform::from_xyz(-10., 4., 2.5).with_scale(Vec3::splat(0.25)),
             ..default()
-        })
-        .insert(CurrentRotationZ(0.))
-        .insert(Rival);
+        },
+        CurrentRotationZ(0.),
+        Rival,
+    ));
 }
 
 fn bad_flap_sound(
@@ -341,16 +352,17 @@ fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         half_extents: Vec3A::new(0.2, 0.3, 0.25),
     };
 
-    commands
-        .spawn_bundle(SceneBundle {
+    commands.spawn((
+        SceneBundle {
             scene: gltf_assets.birb.clone(),
             transform: Transform::from_translation(pos).with_scale(Vec3::splat(0.25)),
             ..default()
-        })
-        .insert(TargetPosition(pos))
-        .insert(CurrentRotationZ(0.))
-        .insert(aabb)
-        .insert(Birb);
+        },
+        TargetPosition(pos),
+        CurrentRotationZ(0.),
+        aabb,
+        Birb,
+    ));
 }
 
 fn collision(
@@ -466,56 +478,55 @@ fn spawn_obstacle(
     .into();
 
     commands
-        .spawn_bundle((
-            Transform::from_xyz(38., 0., 0.),
-            GlobalTransform::default(),
-            Visibility::default(),
-            ComputedVisibility::default(),
-        ))
+        .spawn(SpatialBundle {
+            transform: Transform::from_xyz(38., 0., 0.),
+            ..default()
+        })
         .with_children(|parent| {
-            parent
-                .spawn()
-                .insert_bundle(PbrBundle {
+            parent.spawn((
+                PbrBundle {
                     transform: Transform::from_xyz(0., bottom_y, 0.),
                     mesh: bottom_cylinder,
                     material: materials.add(Color::GREEN.into()),
                     ..Default::default()
-                })
-                .insert(ObstacleCollider);
-            parent
-                .spawn()
-                .insert_bundle(PbrBundle {
+                },
+                ObstacleCollider,
+            ));
+            parent.spawn((
+                PbrBundle {
                     transform: Transform::from_xyz(0., bottom_flange_y, 0.),
                     mesh: flange.clone(),
                     material: materials.add(Color::GREEN.into()),
                     ..Default::default()
-                })
-                .insert(ObstacleCollider);
+                },
+                ObstacleCollider,
+            ));
 
-            parent
-                .spawn()
-                .insert_bundle(PbrBundle {
+            parent.spawn((
+                PbrBundle {
                     transform: Transform::from_xyz(0., top_y, 0.),
                     mesh: top_cylinder,
                     material: materials.add(Color::GREEN.into()),
                     ..Default::default()
-                })
-                .insert(ObstacleCollider);
-            parent
-                .spawn()
-                .insert_bundle(PbrBundle {
+                },
+                ObstacleCollider,
+            ));
+            parent.spawn((
+                PbrBundle {
                     transform: Transform::from_xyz(0., top_flange_y, 0.),
                     mesh: flange.clone(),
                     material: materials.add(Color::GREEN.into()),
                     ..Default::default()
-                })
-                .insert(ObstacleCollider);
+                },
+                ObstacleCollider,
+            ));
 
-            parent
-                .spawn()
-                .insert_bundle((Transform::default(), GlobalTransform::default()))
-                .insert(middle.compute_aabb().unwrap())
-                .insert(ScoreCollider);
+            parent.spawn((
+                Transform::default(),
+                GlobalTransform::default(),
+                middle.compute_aabb().unwrap(),
+                ScoreCollider,
+            ));
         })
         .insert(Obstacle);
 }
@@ -544,7 +555,7 @@ fn start_screen_movement(mut query: Query<(&mut Transform, &mut TargetPosition)>
     let magnitude = 0.15;
 
     for (mut transform, mut target) in query.iter_mut() {
-        let floaty = (time.seconds_since_startup() as f32 * speed).sin() * magnitude;
+        let floaty = (time.elapsed_seconds() * speed).sin() * magnitude;
         transform.translation.y = 3. + floaty;
         target.0 = transform.translation;
     }
@@ -664,14 +675,14 @@ fn update_target_position(
 
 fn setup(mut commands: Commands) {
     // camera
-    commands.spawn_bundle(Camera3dBundle {
+    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(4.5, 5.8, 11.7).with_rotation(Quat::from_rotation_x(-0.211)),
         ..Default::default()
     });
 
     // directional 'sun' light
     const HALF_SIZE: f32 = 40.0;
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene
             shadow_projection: OrthographicProjection {
@@ -687,8 +698,8 @@ fn setup(mut commands: Commands) {
             illuminance: 5000.,
             ..Default::default()
         },
+        // Rotate such that upcoming gaps can be spied from the shadows
         transform: Transform {
-            translation: Vec3::new(0.0, 2.0, 0.0),
             rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4 / 2.)
                 * Quat::from_rotation_y(std::f32::consts::PI / 8.),
             ..Default::default()

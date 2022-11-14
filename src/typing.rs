@@ -3,6 +3,7 @@ use rand::prelude::*;
 
 pub struct TypingPlugin;
 
+#[derive(Resource)]
 pub struct WordList {
     words: Vec<String>,
     index: usize,

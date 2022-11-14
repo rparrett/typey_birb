@@ -49,56 +49,58 @@ fn start_screen(
 ) {
     // rival
 
-    commands
-        .spawn_bundle(SceneBundle {
+    commands.spawn((
+        SceneBundle {
             scene: gltf_assets.birb_gold.clone(),
             transform: Transform::from_xyz(8.4, 4.0, -0.2)
                 .with_scale(Vec3::splat(2.5))
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
             ..default()
-        })
-        .insert(StartScreen);
+        },
+        StartScreen,
+    ));
 
     // text
 
     let container = commands
-        .spawn_bundle(NodeBundle {
-            style: Style {
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    bottom: Val::Px(0.),
-                    right: Val::Px(0.),
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        bottom: Val::Px(0.),
+                        right: Val::Px(0.),
+                        ..Default::default()
+                    },
+                    size: Size::new(Val::Percent(50.0), Val::Percent(70.0)),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    flex_direction: FlexDirection::Column,
                     ..Default::default()
                 },
-                size: Size::new(Val::Percent(50.0), Val::Percent(70.0)),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                flex_direction: FlexDirection::ColumnReverse,
                 ..Default::default()
             },
-            color: Color::NONE.into(),
-            ..Default::default()
-        })
-        .insert(StartScreen)
+            StartScreen,
+        ))
         .id();
 
     let bg = commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(70.0), Val::Percent(40.0)),
                 align_items: AlignItems::FlexStart,
                 justify_content: JustifyContent::SpaceBetween,
-                flex_direction: FlexDirection::ColumnReverse,
+                flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(10.0)),
                 ..Default::default()
             },
-            color: Color::BLACK.into(),
+            background_color: Color::BLACK.into(),
             ..Default::default()
         })
         .id();
 
     let starttext = commands
-        .spawn_bundle(TextBundle {
+        .spawn(TextBundle {
             style: Style {
                 ..Default::default()
             },
@@ -119,34 +121,36 @@ fn start_screen(
         .id();
 
     let starttarget = commands
-        .spawn_bundle(TextBundle {
-            style: Style {
+        .spawn((
+            TextBundle {
+                style: Style {
+                    ..Default::default()
+                },
+                text: Text {
+                    sections: vec![
+                        TextSection {
+                            value: "".into(),
+                            style: TextStyle {
+                                font: font_assets.main.clone(),
+                                font_size: 40.,
+                                color: Color::GREEN,
+                            },
+                        },
+                        TextSection {
+                            value: "START".into(),
+                            style: TextStyle {
+                                font: font_assets.main.clone(),
+                                font_size: 40.,
+                                color: Color::rgb_u8(255, 235, 146),
+                            },
+                        },
+                    ],
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            text: Text {
-                sections: vec![
-                    TextSection {
-                        value: "".into(),
-                        style: TextStyle {
-                            font: font_assets.main.clone(),
-                            font_size: 40.,
-                            color: Color::GREEN,
-                        },
-                    },
-                    TextSection {
-                        value: "START".into(),
-                        style: TextStyle {
-                            font: font_assets.main.clone(),
-                            font_size: 40.,
-                            color: Color::rgb_u8(255, 235, 146),
-                        },
-                    },
-                ],
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(TypingTarget::new_whole("start".into(), vec![Action::Start]))
+            TypingTarget::new_whole("start".into(), vec![Action::Start]),
+        ))
         .id();
 
     commands.entity(container).push_children(&[bg]);
@@ -171,56 +175,58 @@ fn death_screen(
 
     // rival
 
-    commands
-        .spawn_bundle(SceneBundle {
+    commands.spawn((
+        SceneBundle {
             scene: gltf_assets.birb_gold.clone(),
             transform: Transform::from_xyz(8.4, 4.0, -0.2)
                 .with_scale(Vec3::splat(2.5))
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
             ..default()
-        })
-        .insert(EndScreen);
+        },
+        EndScreen,
+    ));
 
     // text
 
     let container = commands
-        .spawn_bundle(NodeBundle {
-            style: Style {
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    bottom: Val::Px(0.),
-                    right: Val::Px(0.),
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        bottom: Val::Px(0.),
+                        right: Val::Px(0.),
+                        ..Default::default()
+                    },
+                    size: Size::new(Val::Percent(50.0), Val::Percent(70.0)),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    flex_direction: FlexDirection::Column,
                     ..Default::default()
                 },
-                size: Size::new(Val::Percent(50.0), Val::Percent(70.0)),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                flex_direction: FlexDirection::ColumnReverse,
                 ..Default::default()
             },
-            color: Color::NONE.into(),
-            ..Default::default()
-        })
-        .insert(EndScreen)
+            EndScreen,
+        ))
         .id();
 
     let bg = commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(70.0), Val::Percent(40.0)),
                 align_items: AlignItems::FlexStart,
                 justify_content: JustifyContent::SpaceBetween,
-                flex_direction: FlexDirection::ColumnReverse,
+                flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(10.0)),
                 ..Default::default()
             },
-            color: Color::BLACK.into(),
+            background_color: Color::BLACK.into(),
             ..Default::default()
         })
         .id();
 
     let deadtext = commands
-        .spawn_bundle(TextBundle {
+        .spawn(TextBundle {
             style: Style {
                 ..Default::default()
             },
@@ -240,34 +246,36 @@ fn death_screen(
         .id();
 
     let retrytext = commands
-        .spawn_bundle(TextBundle {
-            style: Style {
+        .spawn((
+            TextBundle {
+                style: Style {
+                    ..Default::default()
+                },
+                text: Text {
+                    sections: vec![
+                        TextSection {
+                            value: "".into(),
+                            style: TextStyle {
+                                font: font_assets.main.clone(),
+                                font_size: 40.,
+                                color: Color::GREEN,
+                            },
+                        },
+                        TextSection {
+                            value: "RETRY".into(),
+                            style: TextStyle {
+                                font: font_assets.main.clone(),
+                                font_size: 40.,
+                                color: Color::rgb_u8(255, 235, 146),
+                            },
+                        },
+                    ],
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            text: Text {
-                sections: vec![
-                    TextSection {
-                        value: "".into(),
-                        style: TextStyle {
-                            font: font_assets.main.clone(),
-                            font_size: 40.,
-                            color: Color::GREEN,
-                        },
-                    },
-                    TextSection {
-                        value: "RETRY".into(),
-                        style: TextStyle {
-                            font: font_assets.main.clone(),
-                            font_size: 40.,
-                            color: Color::rgb_u8(255, 235, 146),
-                        },
-                    },
-                ],
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(TypingTarget::new_whole("retry".into(), vec![Action::Retry]))
+            TypingTarget::new_whole("retry".into(), vec![Action::Retry]),
+        ))
         .id();
 
     commands.entity(container).push_children(&[bg]);
@@ -300,20 +308,19 @@ fn update_targets(
 fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Res<FontAssets>) {
     // root node
     let root = commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                 justify_content: JustifyContent::SpaceBetween,
-                flex_direction: FlexDirection::ColumnReverse,
+                flex_direction: FlexDirection::Column,
                 ..Default::default()
             },
-            color: Color::NONE.into(),
             ..Default::default()
         })
         .id();
 
     let topbar = commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Px(50.)),
                 align_items: AlignItems::Center,
@@ -324,7 +331,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                 },
                 ..Default::default()
             },
-            color: Color::BLACK.into(),
+            background_color: Color::BLACK.into(),
             ..Default::default()
         })
         .id();
@@ -336,42 +343,41 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
     }
 
     let toptext = commands
-        .spawn_bundle(TextBundle {
-            style: Style {
-                margin: UiRect::all(Val::Px(5.0)),
+        .spawn((
+            TextBundle {
+                style: Style {
+                    margin: UiRect::all(Val::Px(5.0)),
+                    ..Default::default()
+                },
+                text: Text {
+                    sections: vec![
+                        TextSection {
+                            value: "".into(),
+                            style: TextStyle {
+                                font: font_assets.main.clone(),
+                                font_size: 40.,
+                                color: Color::GREEN,
+                            },
+                        },
+                        TextSection {
+                            value: topword.clone(),
+                            style: TextStyle {
+                                font: font_assets.main.clone(),
+                                font_size: 40.,
+                                color: Color::rgb_u8(255, 235, 146),
+                            },
+                        },
+                    ],
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            text: Text {
-                sections: vec![
-                    TextSection {
-                        value: "".into(),
-                        style: TextStyle {
-                            font: font_assets.main.clone(),
-                            font_size: 40.,
-                            color: Color::GREEN,
-                        },
-                    },
-                    TextSection {
-                        value: topword.clone(),
-                        style: TextStyle {
-                            font: font_assets.main.clone(),
-                            font_size: 40.,
-                            color: Color::rgb_u8(255, 235, 146),
-                        },
-                    },
-                ],
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(TypingTarget::new(
-            topword,
-            vec![Action::BirbUp, Action::IncScore(1)],
+            TypingTarget::new(topword, vec![Action::BirbUp, Action::IncScore(1)]),
         ))
         .id();
 
     let bottombar = commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Px(50.)),
                 align_items: AlignItems::Center,
@@ -382,83 +388,84 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                 },
                 ..Default::default()
             },
-            color: Color::BLACK.into(),
+            background_color: Color::BLACK.into(),
             ..Default::default()
         })
         .id();
 
     let bottomword = wordlist.find_next_word(&not);
     let bottomtext = commands
-        .spawn_bundle(TextBundle {
-            style: Style {
-                margin: UiRect::all(Val::Px(5.0)),
+        .spawn((
+            TextBundle {
+                style: Style {
+                    margin: UiRect::all(Val::Px(5.0)),
+                    ..Default::default()
+                },
+                text: Text {
+                    sections: vec![
+                        TextSection {
+                            value: "".into(),
+                            style: TextStyle {
+                                font: font_assets.main.clone(),
+                                font_size: 40.,
+                                color: Color::GREEN,
+                            },
+                        },
+                        TextSection {
+                            value: bottomword.clone(),
+                            style: TextStyle {
+                                font: font_assets.main.clone(),
+                                font_size: 40.,
+                                color: Color::rgb_u8(255, 235, 146),
+                            },
+                        },
+                    ],
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            text: Text {
-                sections: vec![
-                    TextSection {
-                        value: "".into(),
-                        style: TextStyle {
-                            font: font_assets.main.clone(),
-                            font_size: 40.,
-                            color: Color::GREEN,
-                        },
-                    },
-                    TextSection {
-                        value: bottomword.clone(),
-                        style: TextStyle {
-                            font: font_assets.main.clone(),
-                            font_size: 40.,
-                            color: Color::rgb_u8(255, 235, 146),
-                        },
-                    },
-                ],
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(TypingTarget::new(
-            bottomword,
-            vec![Action::BirbDown, Action::IncScore(1)],
+            TypingTarget::new(bottomword, vec![Action::BirbDown, Action::IncScore(1)]),
         ))
         .id();
 
     let scoretext = commands
-        .spawn_bundle(TextBundle {
-            style: Style {
-                position_type: PositionType::Absolute,
-                position: UiRect {
-                    top: Val::Px(3.0),
-                    left: Val::Px(10.0),
+        .spawn((
+            TextBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        top: Val::Px(3.0),
+                        left: Val::Px(10.0),
+                        ..Default::default()
+                    },
+                    padding: UiRect::all(Val::Px(5.0)),
                     ..Default::default()
                 },
-                padding: UiRect::all(Val::Px(5.0)),
+                text: Text {
+                    sections: vec![
+                        TextSection {
+                            value: "SCORE ".into(),
+                            style: TextStyle {
+                                font: font_assets.main.clone(),
+                                font_size: 40.,
+                                color: Color::rgba(0.8, 0.8, 0.8, 1.0),
+                            },
+                        },
+                        TextSection {
+                            value: "0".into(),
+                            style: TextStyle {
+                                font: font_assets.main.clone(),
+                                font_size: 40.,
+                                color: Color::WHITE,
+                            },
+                        },
+                    ],
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            text: Text {
-                sections: vec![
-                    TextSection {
-                        value: "SCORE ".into(),
-                        style: TextStyle {
-                            font: font_assets.main.clone(),
-                            font_size: 40.,
-                            color: Color::rgba(0.8, 0.8, 0.8, 1.0),
-                        },
-                    },
-                    TextSection {
-                        value: "0".into(),
-                        style: TextStyle {
-                            font: font_assets.main.clone(),
-                            font_size: 40.,
-                            color: Color::WHITE,
-                        },
-                    },
-                ],
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(ScoreText)
+            ScoreText,
+        ))
         .id();
 
     commands.entity(root).push_children(&[topbar, bottombar]);

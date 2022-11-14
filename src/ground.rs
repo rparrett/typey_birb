@@ -92,7 +92,7 @@ fn spawn_ground(
         .translation
         .x;
 
-    commands.spawn_bundle(GroundBundle::new(max_x + GROUND_LENGTH, meshes, materials));
+    commands.spawn(GroundBundle::new(max_x + GROUND_LENGTH, meshes, materials));
 }
 
 fn setup(
@@ -100,7 +100,7 @@ fn setup(
     meshes: ResMut<Assets<Mesh>>,
     materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    commands.spawn_bundle(GroundBundle::new(0., meshes, materials));
+    commands.spawn(GroundBundle::new(0., meshes, materials));
 }
 
 pub fn ground_mesh(size: Vec2, num_vertices: UVec2) -> Mesh {

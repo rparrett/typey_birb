@@ -1,3 +1,4 @@
+use bevy::prelude::Resource;
 use rand::prelude::*;
 use std::ops::Range;
 
@@ -20,6 +21,7 @@ impl NextGapKind {
         }
     }
 }
+#[derive(Resource)]
 pub struct NextGapBag {
     rng: StdRng,
     index: usize,
