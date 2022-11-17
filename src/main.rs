@@ -22,7 +22,7 @@ mod ui;
 mod util;
 mod words;
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 struct GltfAssets {
     #[asset(path = "bevybird_gold.glb#Scene0")]
     birb_gold: Handle<Scene>,
@@ -30,13 +30,13 @@ struct GltfAssets {
     birb: Handle<Scene>,
 }
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 struct FontAssets {
     #[asset(path = "Amatic-Bold.ttf")]
     main: Handle<Font>,
 }
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 struct AudioAssets {
     #[asset(path = "menu.ogg")]
     menu: Handle<AudioSource>,
