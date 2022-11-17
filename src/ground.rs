@@ -50,8 +50,8 @@ impl Plugin for GroundPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_update(AppState::Playing)
-                .with_system(ground_movement.label("ground_movement"))
-                .with_system(spawn_ground.after("ground_movement")),
+                .with_system(ground_movement)
+                .with_system(spawn_ground.after(ground_movement)),
         )
         .add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup));
     }
