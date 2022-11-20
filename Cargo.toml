@@ -13,7 +13,6 @@ inspector = ["bevy-inspector-egui"]
 [dependencies]
 bevy = { version = "0.9", features = ["jpeg", "vorbis"] }
 bevy-inspector-egui = { version = "0.14", optional = true }
-#bevy_asset_loader = "0.14"
-bevy_asset_loader = { git = "https://github.com/NiklasEi/bevy_asset_loader.git", branch = "bevy_main" }
+bevy_asset_loader = "0.14"
 
 rand = "0.8"
