@@ -48,12 +48,11 @@ pub struct GroundPlugin;
 
 impl Plugin for GroundPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            SystemSet::on_update(AppState::Playing)
-                .with_system(ground_movement)
-                .with_system(spawn_ground.after(ground_movement)),
-        )
-        .add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup));
+        app.add_systems(
+            (ground_movement, spawn_ground.after(ground_movement))
+                .in_set(OnUpdate(AppState::Playing)),
+        );
+        app.add_system(setup.in_schedule(OnExit(AppState::Loading)));
     }
 }
 

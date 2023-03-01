@@ -5,6 +5,7 @@ use bevy::{
     audio::AudioSink,
     log::{Level, LogPlugin},
     math::Vec3A,
+    pbr::CascadeShadowConfigBuilder,
     prelude::*,
     render::primitives::Aabb,
 };
@@ -57,8 +58,9 @@ struct AudioAssets {
 #[derive(Resource)]
 struct MusicController(Handle<AudioSink>);
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum AppState {
+    #[default]
     Loading,
     StartScreen,
     Playing,
@@ -143,23 +145,15 @@ const GAP_START_MAX_Y: f32 = 6.7 - GAP_SIZE;
 fn main() {
     let mut app = App::new();
 
-    app.add_loading_state(
-        LoadingState::new(AppState::Loading)
-            .continue_to_state(AppState::StartScreen)
-            .with_collection::<GltfAssets>()
-            .with_collection::<FontAssets>()
-            .with_collection::<AudioAssets>(),
-    );
-
     app.insert_resource(ClearColor(Color::rgb_u8(177, 214, 222)));
 
     app.add_plugins(
         DefaultPlugins
             .set(WindowPlugin {
-                window: WindowDescriptor {
+                primary_window: Some(Window {
                     title: "Typey Birb".into(),
                     ..Default::default()
-                },
+                }),
                 ..default()
             })
             .set(LogPlugin {
@@ -168,14 +162,22 @@ fn main() {
             }),
     );
 
+    app.add_state::<AppState>();
+
+    app.add_loading_state(
+        LoadingState::new(AppState::Loading).continue_to_state(AppState::StartScreen),
+    );
+    app.add_collection_to_loading_state::<_, GltfAssets>(AppState::Loading);
+    app.add_collection_to_loading_state::<_, FontAssets>(AppState::Loading);
+    app.add_collection_to_loading_state::<_, AudioAssets>(AppState::Loading);
+
+    // TODO
     #[cfg(feature = "inspector")]
     {
         app.add_plugin(WorldInspectorPlugin::new());
         app.add_system_set(SystemSet::on_update(AppState::Paused).with_system(pause));
         app.add_system_set(SystemSet::on_update(AppState::Playing).with_system(pause));
     }
-
-    app.add_state(AppState::Loading);
 
     app.init_resource::<Score>()
         .init_resource::<Speed>()
@@ -191,44 +193,35 @@ fn main() {
         .add_plugin(crate::ui::UiPlugin)
         .add_plugin(crate::ground::GroundPlugin);
 
-    app.add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup))
-        .add_system_set(
-            SystemSet::on_enter(AppState::StartScreen)
-                .with_system(spawn_birb)
-                .with_system(start_screen_music),
+    app.add_system(setup.in_schedule(OnExit(AppState::Loading)));
+
+    app.add_systems((spawn_birb, start_screen_music).in_schedule(OnEnter(AppState::StartScreen)));
+    app.add_systems(
+        (start_screen_movement, start_game, bad_flap_sound).in_set(OnUpdate(AppState::StartScreen)),
+    );
+
+    app.add_systems((spawn_rival, game_music).in_schedule(OnEnter(AppState::Playing)));
+    app.add_systems(
+        (
+            movement,
+            rival_movement,
+            collision,
+            obstacle_movement,
+            spawn_obstacle,
+            update_target_position,
+            update_score,
+            bad_flap_sound,
         )
-        .add_system_set(
-            SystemSet::on_update(AppState::StartScreen).with_system(start_screen_movement),
-        )
-        .add_system_set(
-            SystemSet::on_enter(AppState::Playing)
-                .with_system(spawn_rival)
-                .with_system(game_music),
-        )
-        .add_system_set(
-            SystemSet::on_update(AppState::Playing)
-                .with_system(movement)
-                .with_system(rival_movement)
-                .with_system(collision)
-                .with_system(obstacle_movement)
-                .with_system(spawn_obstacle)
-                .with_system(update_target_position)
-                .with_system(update_score)
-                .with_system(bad_flap_sound),
-        )
-        .add_system_set(
-            SystemSet::on_update(AppState::StartScreen)
-                .with_system(start_game)
-                .with_system(bad_flap_sound),
-        )
-        .add_system_set(
-            SystemSet::on_update(AppState::EndScreen)
-                .with_system(rival_movement)
-                .with_system(retry_game)
-                .with_system(bad_flap_sound),
-        )
-        .add_system_set(SystemSet::on_exit(AppState::EndScreen).with_system(reset))
-        .run();
+            .in_set(OnUpdate(AppState::Playing)),
+    );
+
+    app.add_systems(
+        (rival_movement, retry_game, bad_flap_sound).in_set(OnUpdate(AppState::EndScreen)),
+    );
+
+    app.add_system(reset.in_schedule(OnExit(AppState::EndScreen)));
+
+    app.run();
 }
 
 #[cfg(feature = "inspector")]
@@ -374,7 +367,7 @@ fn collision(
     >,
     obstacle_collider_query: Query<(&Aabb, &GlobalTransform), With<ObstacleCollider>>,
     mut score: ResMut<Score>,
-    mut state: ResMut<State<AppState>>,
+    mut next_state: ResMut<NextState<AppState>>,
     audio_assets: Res<AudioAssets>,
     audio: Res<Audio>,
 ) {
@@ -398,7 +391,7 @@ fn collision(
         obstacle_aabb.center += Vec3A::from(transform.translation());
 
         if collide_aabb(&obstacle_aabb, &birb) {
-            state.set(AppState::EndScreen).unwrap();
+            next_state.set(AppState::EndScreen);
 
             audio.play(audio_assets.crash.clone());
 
@@ -614,18 +607,18 @@ fn movement(
     }
 }
 
-fn retry_game(mut events: EventReader<Action>, mut state: ResMut<State<AppState>>) {
+fn retry_game(mut events: EventReader<Action>, mut next_state: ResMut<NextState<AppState>>) {
     for e in events.iter() {
         if let Action::Retry = e {
-            state.set(AppState::StartScreen).unwrap();
+            next_state.set(AppState::StartScreen);
         }
     }
 }
 
-fn start_game(mut events: EventReader<Action>, mut state: ResMut<State<AppState>>) {
+fn start_game(mut events: EventReader<Action>, mut next_state: ResMut<NextState<AppState>>) {
     for e in events.iter() {
         if let Action::Start = e {
-            state.set(AppState::Playing).unwrap();
+            next_state.set(AppState::Playing);
         }
     }
 }
@@ -681,23 +674,17 @@ fn setup(mut commands: Commands) {
     });
 
     // directional 'sun' light
-    const HALF_SIZE: f32 = 40.0;
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            // Configure the projection to better fit the scene
-            shadow_projection: OrthographicProjection {
-                left: -HALF_SIZE,
-                right: HALF_SIZE,
-                bottom: -HALF_SIZE,
-                top: HALF_SIZE,
-                near: -10.0 * HALF_SIZE,
-                far: 10.0 * HALF_SIZE,
-                ..Default::default()
-            },
             shadows_enabled: true,
             illuminance: 5000.,
             ..Default::default()
         },
+        cascade_shadow_config: CascadeShadowConfigBuilder {
+            maximum_distance: 40.,
+            ..default()
+        }
+        .into(),
         // Rotate such that upcoming gaps can be spied from the shadows
         transform: Transform {
             rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4 / 2.)

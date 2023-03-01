@@ -8,11 +8,19 @@ license = "MIT OR Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-inspector = ["bevy-inspector-egui"]
+#inspector = ["bevy-inspector-egui"]
 
 [dependencies]
-bevy = { version = "0.9", features = ["jpeg", "vorbis"] }
-bevy-inspector-egui = { version = "0.14", optional = true }
-bevy_asset_loader = "0.14"
+bevy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", features = ["jpeg"] }
+#bevy = { version = "0.10", features = ["jpeg"] }
+#bevy-inspector-egui = { version = "0.14", optional = true }
+#bevy_asset_loader = "0.14"
+bevy_asset_loader = { git = "https://github.com/NiklasEi/bevy_asset_loader", branch = "bevy_main", features = ["2d", "standard_dynamic_assets"] }
 
 rand = "0.8"
+
+
+[patch."https://github.com/bevyengine/bevy"]
+bevy = { git = "https://github.com/bevyengine/bevy.git?branch=main" }
+[patch."https://github.com/bevyengine/bevy.git"]
+bevy = { git = "https://github.com/bevyengine/bevy.git?branch=main" }
