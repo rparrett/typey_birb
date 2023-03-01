@@ -15,18 +15,13 @@ struct EndScreen;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        // We need the font to have been loaded for this to work.
-        app.add_system(update_targets)
-            .add_system(update_score)
-            .add_system_set(SystemSet::on_enter(AppState::EndScreen).with_system(death_screen))
-            .add_system_set(SystemSet::on_exit(AppState::Loading).with_system(setup))
-            .add_system_set(SystemSet::on_enter(AppState::StartScreen).with_system(start_screen))
-            .add_system_set(
-                SystemSet::on_exit(AppState::StartScreen).with_system(despawn_start_screen),
-            )
-            .add_system_set(
-                SystemSet::on_exit(AppState::EndScreen).with_system(despawn_dead_screen),
-            );
+        app.add_system(update_targets);
+        app.add_system(update_score);
+        app.add_system(setup.in_schedule(OnExit(AppState::Loading)));
+        app.add_system(start_screen.in_schedule(OnEnter(AppState::StartScreen)));
+        app.add_system(despawn_start_screen.in_schedule(OnExit(AppState::StartScreen)));
+        app.add_system(death_screen.in_schedule(OnEnter(AppState::EndScreen)));
+        app.add_system(despawn_dead_screen.in_schedule(OnExit(AppState::EndScreen)));
     }
 }
 
