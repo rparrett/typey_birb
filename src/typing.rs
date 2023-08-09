@@ -82,8 +82,8 @@ impl TypingTarget {
 impl Plugin for TypingPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WordList>()
-            .add_system(new_words)
-            .add_system(keyboard);
+            .add_systems(Update, new_words)
+            .add_systems(Update, keyboard);
     }
 }
 

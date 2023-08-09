@@ -18,7 +18,6 @@ pub struct Ground;
 
 #[derive(Bundle)]
 pub struct GroundBundle {
-    #[bundle]
     pbr: PbrBundle,
     ground: Ground,
 }
@@ -49,10 +48,11 @@ pub struct GroundPlugin;
 impl Plugin for GroundPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
+            Update,
             (ground_movement, spawn_ground.after(ground_movement))
-                .in_set(OnUpdate(AppState::Playing)),
+                .run_if(in_state(AppState::Playing)),
         );
-        app.add_system(setup.in_schedule(OnExit(AppState::Loading)));
+        app.add_systems(OnExit(AppState::Loading), setup);
     }
 }
 

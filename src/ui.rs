@@ -15,13 +15,16 @@ struct EndScreen;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_targets);
-        app.add_system(update_score);
-        app.add_system(setup.in_schedule(OnExit(AppState::Loading)));
-        app.add_system(start_screen.in_schedule(OnEnter(AppState::StartScreen)));
-        app.add_system(despawn_start_screen.in_schedule(OnExit(AppState::StartScreen)));
-        app.add_system(death_screen.in_schedule(OnEnter(AppState::EndScreen)));
-        app.add_system(despawn_dead_screen.in_schedule(OnExit(AppState::EndScreen)));
+        app.add_systems(Update, update_targets);
+        app.add_systems(Update, update_score);
+
+        app.add_systems(OnExit(AppState::Loading), setup);
+
+        app.add_systems(OnEnter(AppState::StartScreen), start_screen);
+        app.add_systems(OnExit(AppState::StartScreen), despawn_start_screen);
+
+        app.add_systems(OnEnter(AppState::EndScreen), death_screen);
+        app.add_systems(OnExit(AppState::EndScreen), despawn_dead_screen);
     }
 }
 
@@ -62,12 +65,10 @@ fn start_screen(
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect {
-                        bottom: Val::Px(0.),
-                        right: Val::Px(0.),
-                        ..Default::default()
-                    },
-                    size: Size::new(Val::Percent(50.0), Val::Percent(70.0)),
+                    bottom: Val::Px(0.),
+                    right: Val::Px(0.),
+                    width: Val::Percent(50.0),
+                    height: Val::Percent(70.0),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
@@ -82,7 +83,8 @@ fn start_screen(
     let bg = commands
         .spawn(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(70.0), Val::Percent(40.0)),
+                width: Val::Percent(70.0),
+                height: Val::Percent(40.0),
                 align_items: AlignItems::FlexStart,
                 justify_content: JustifyContent::SpaceBetween,
                 flex_direction: FlexDirection::Column,
@@ -188,12 +190,10 @@ fn death_screen(
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect {
-                        bottom: Val::Px(0.),
-                        right: Val::Px(0.),
-                        ..Default::default()
-                    },
-                    size: Size::new(Val::Percent(50.0), Val::Percent(70.0)),
+                    bottom: Val::Px(0.),
+                    right: Val::Px(0.),
+                    width: Val::Percent(50.0),
+                    height: Val::Percent(70.0),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
@@ -208,7 +208,8 @@ fn death_screen(
     let bg = commands
         .spawn(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(70.0), Val::Percent(40.0)),
+                width: Val::Percent(70.0),
+                height: Val::Percent(40.0),
                 align_items: AlignItems::FlexStart,
                 justify_content: JustifyContent::SpaceBetween,
                 flex_direction: FlexDirection::Column,
@@ -305,7 +306,8 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
     let root = commands
         .spawn(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 justify_content: JustifyContent::SpaceBetween,
                 flex_direction: FlexDirection::Column,
                 ..Default::default()
@@ -317,7 +319,8 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
     let topbar = commands
         .spawn(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(100.0), Val::Px(50.)),
+                width: Val::Percent(100.0),
+                height: Val::Px(50.),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 padding: UiRect {
@@ -374,7 +377,8 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
     let bottombar = commands
         .spawn(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(100.0), Val::Px(50.)),
+                width: Val::Percent(100.0),
+                height: Val::Px(50.),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 padding: UiRect {
@@ -428,11 +432,8 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
             TextBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect {
-                        top: Val::Px(3.0),
-                        left: Val::Px(10.0),
-                        ..Default::default()
-                    },
+                    top: Val::Px(3.0),
+                    left: Val::Px(10.0),
                     padding: UiRect::all(Val::Px(5.0)),
                     ..Default::default()
                 },

@@ -2,7 +2,6 @@
 #![allow(clippy::too_many_arguments)]
 
 use bevy::{
-    audio::AudioSink,
     log::{Level, LogPlugin},
     math::Vec3A,
     pbr::CascadeShadowConfigBuilder,
@@ -54,8 +53,8 @@ struct AudioAssets {
     bump: Handle<AudioSource>,
 }
 
-#[derive(Resource)]
-struct MusicController(Handle<AudioSink>);
+#[derive(Component)]
+struct MusicController;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum AppState {
@@ -80,7 +79,7 @@ struct TargetPosition(Vec3);
 #[derive(Component)]
 struct CurrentRotationZ(f32);
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Event)]
 pub enum Action {
     BadFlap,
     BirbUp,
@@ -172,9 +171,9 @@ fn main() {
 
     #[cfg(feature = "inspector")]
     {
-        app.add_plugin(WorldInspectorPlugin::new());
-        app.add_system(pause.in_set(OnUpdate(AppState::Paused)));
-        app.add_system(pause.in_set(OnUpdate(AppState::Playing)));
+        app.add_plugins(WorldInspectorPlugin::new());
+        app.add_systems(Update, pause.run_if(in_state(AppState::Paused)));
+        app.add_systems(Update, pause.run_if(in_state(AppState::Playing)));
     }
 
     app.init_resource::<Score>()
@@ -187,19 +186,24 @@ fn main() {
         ))
         .add_event::<Action>();
 
-    app.add_plugin(crate::typing::TypingPlugin)
-        .add_plugin(crate::ui::UiPlugin)
-        .add_plugin(crate::ground::GroundPlugin);
+    app.add_plugins(crate::typing::TypingPlugin)
+        .add_plugins(crate::ui::UiPlugin)
+        .add_plugins(crate::ground::GroundPlugin);
 
-    app.add_system(setup.in_schedule(OnExit(AppState::Loading)));
+    app.add_systems(OnExit(AppState::Loading), setup);
 
-    app.add_systems((spawn_birb, start_screen_music).in_schedule(OnEnter(AppState::StartScreen)));
     app.add_systems(
-        (start_screen_movement, start_game, bad_flap_sound).in_set(OnUpdate(AppState::StartScreen)),
+        OnEnter(AppState::StartScreen),
+        (spawn_birb, start_screen_music),
+    );
+    app.add_systems(
+        Update,
+        (start_screen_movement, start_game, bad_flap_sound).run_if(in_state(AppState::StartScreen)),
     );
 
-    app.add_systems((spawn_rival, game_music).in_schedule(OnEnter(AppState::Playing)));
+    app.add_systems(OnEnter(AppState::Playing), (spawn_rival, game_music));
     app.add_systems(
+        Update,
         (
             movement,
             rival_movement,
@@ -210,14 +214,15 @@ fn main() {
             update_score,
             bad_flap_sound,
         )
-            .in_set(OnUpdate(AppState::Playing)),
+            .run_if(in_state(AppState::Playing)),
     );
 
     app.add_systems(
-        (rival_movement, retry_game, bad_flap_sound).in_set(OnUpdate(AppState::EndScreen)),
+        Update,
+        (rival_movement, retry_game, bad_flap_sound).run_if(in_state(AppState::EndScreen)),
     );
 
-    app.add_system(reset.in_schedule(OnExit(AppState::EndScreen)));
+    app.add_systems(OnExit(AppState::EndScreen), reset);
 
     app.run();
 }
@@ -229,17 +234,16 @@ fn pause(
     mut next_state: ResMut<NextState<AppState>>,
 ) {
     if keyboard.just_pressed(KeyCode::Escape) {
-        match state.0 {
+        match state.get() {
             AppState::Paused => {
                 next_state.set(AppState::Playing);
-                keyboard.clear();
             }
             AppState::Playing => {
                 next_state.set(AppState::Paused);
-                keyboard.clear();
             }
             _ => {}
         }
+        keyboard.clear();
     }
 }
 
@@ -285,13 +289,16 @@ fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
 }
 
 fn bad_flap_sound(
+    mut commands: Commands,
     audio_assets: Res<AudioAssets>,
-    audio: Res<Audio>,
     mut events: EventReader<Action>,
 ) {
     for e in events.iter() {
         if let Action::BadFlap = e {
-            audio.play(audio_assets.badflap.clone());
+            commands.spawn(AudioBundle {
+                source: audio_assets.badflap.clone(),
+                settings: PlaybackSettings::DESPAWN,
+            });
         }
     }
 }
@@ -299,35 +306,39 @@ fn bad_flap_sound(
 fn game_music(
     mut commands: Commands,
     audio_assets: Res<AudioAssets>,
-    audio_sinks: Res<Assets<AudioSink>>,
-    audio: Res<Audio>,
-    controller: Option<Res<MusicController>>,
+    existing_music_query: Query<(Entity, &AudioSink), With<MusicController>>,
 ) {
-    if let Some(controller) = controller {
-        if let Some(sink) = audio_sinks.get(&controller.0) {
-            sink.pause();
-        }
+    for (entity, sink) in &existing_music_query {
+        sink.pause();
+        commands.entity(entity).despawn();
     }
-    let handle = audio_sinks
-        .get_handle(audio.play_with_settings(audio_assets.game.clone(), PlaybackSettings::LOOP));
-    commands.insert_resource(MusicController(handle));
+
+    commands.spawn((
+        AudioBundle {
+            source: audio_assets.game.clone(),
+            settings: PlaybackSettings::LOOP,
+        },
+        MusicController,
+    ));
 }
 
 fn start_screen_music(
     mut commands: Commands,
     audio_assets: Res<AudioAssets>,
-    audio_sinks: Res<Assets<AudioSink>>,
-    audio: Res<Audio>,
-    controller: Option<Res<MusicController>>,
+    existing_music_query: Query<(Entity, &AudioSink), With<MusicController>>,
 ) {
-    if let Some(controller) = controller {
-        if let Some(sink) = audio_sinks.get(&controller.0) {
-            sink.pause();
-        }
+    for (entity, sink) in &existing_music_query {
+        sink.pause();
+        commands.entity(entity).despawn();
     }
-    let handle = audio_sinks
-        .get_handle(audio.play_with_settings(audio_assets.menu.clone(), PlaybackSettings::LOOP));
-    commands.insert_resource(MusicController(handle));
+
+    commands.spawn((
+        AudioBundle {
+            source: audio_assets.menu.clone(),
+            settings: PlaybackSettings::LOOP,
+        },
+        MusicController,
+    ));
 }
 
 fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
@@ -371,7 +382,6 @@ fn collision(
     mut score: ResMut<Score>,
     mut next_state: ResMut<NextState<AppState>>,
     audio_assets: Res<AudioAssets>,
-    audio: Res<Audio>,
 ) {
     let (birb_aabb, transform) = birb_query.single();
     let mut birb_aabb = *birb_aabb;
@@ -385,7 +395,10 @@ fn collision(
             commands.entity(entity).insert(Used);
             score.0 += 2;
 
-            audio.play(audio_assets.score.clone());
+            commands.spawn(AudioBundle {
+                source: audio_assets.score.clone(),
+                settings: PlaybackSettings::DESPAWN,
+            });
         }
     }
     for (obstacle_aabb, transform) in obstacle_collider_query.iter() {
@@ -395,7 +408,10 @@ fn collision(
         if collide_aabb(&obstacle_aabb, &birb_aabb) {
             next_state.set(AppState::EndScreen);
 
-            audio.play(audio_assets.crash.clone());
+            commands.spawn(AudioBundle {
+                source: audio_assets.crash.clone(),
+                settings: PlaybackSettings::DESPAWN,
+            });
 
             // it's possible to collide with the pipe and flange simultaneously
             // so we should only react to one game-ending collision.
@@ -639,10 +655,10 @@ fn update_score(mut events: EventReader<Action>, mut score: ResMut<Score>) {
 }
 
 fn update_target_position(
+    mut commands: Commands,
     mut events: EventReader<Action>,
     mut query: Query<&mut TargetPosition>,
     audio_assets: Res<AudioAssets>,
-    audio: Res<Audio>,
 ) {
     for e in events.iter() {
         match e {
@@ -651,9 +667,16 @@ fn update_target_position(
                     target.0.y += 0.25;
                     if target.0.y > BIRB_MAX_Y {
                         target.0.y = BIRB_MAX_Y;
-                        audio.play(audio_assets.bump.clone());
+
+                        commands.spawn(AudioBundle {
+                            source: audio_assets.bump.clone(),
+                            settings: PlaybackSettings::DESPAWN,
+                        });
                     } else {
-                        audio.play(audio_assets.flap.clone());
+                        commands.spawn(AudioBundle {
+                            source: audio_assets.flap.clone(),
+                            settings: PlaybackSettings::DESPAWN,
+                        });
                     }
                 }
             }
@@ -662,9 +685,16 @@ fn update_target_position(
                     target.0.y -= 0.25;
                     if target.0.y < BIRB_MIN_Y {
                         target.0.y = BIRB_MIN_Y;
-                        audio.play(audio_assets.bump.clone());
+
+                        commands.spawn(AudioBundle {
+                            source: audio_assets.bump.clone(),
+                            settings: PlaybackSettings::DESPAWN,
+                        });
                     } else {
-                        audio.play(audio_assets.flap.clone());
+                        commands.spawn(AudioBundle {
+                            source: audio_assets.flap.clone(),
+                            settings: PlaybackSettings::DESPAWN,
+                        });
                     }
                 }
             }
