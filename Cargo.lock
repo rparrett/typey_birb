@@ -793,6 +793,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_pipelines_ready"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1adfd47596d0bb7473c6cfeb6b5e077f531082e5932c729023c9fbdba7983bfa"
+dependencies = [
+ "bevy",
+ "crossbeam-channel",
+]
+
+[[package]]
 name = "bevy_ptr"
 version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3421,6 +3431,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_asset_loader",
+ "bevy_pipelines_ready",
  "rand",
 ]
 

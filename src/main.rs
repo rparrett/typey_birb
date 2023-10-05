@@ -8,50 +8,21 @@ use bevy::{
     prelude::*,
     render::primitives::Aabb,
 };
-use bevy_asset_loader::prelude::*;
+
 #[cfg(feature = "inspector")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+
+use loading::{AudioAssets, FontAssets, GltfAssets, LoadingPlugin};
 use luck::NextGapBag;
 use util::collide_aabb;
 
 mod ground;
+mod loading;
 mod luck;
 mod typing;
 mod ui;
 mod util;
 mod words;
-
-#[derive(AssetCollection, Resource)]
-struct GltfAssets {
-    #[asset(path = "bevybird_gold.glb#Scene0")]
-    birb_gold: Handle<Scene>,
-    #[asset(path = "bevybird.glb#Scene0")]
-    birb: Handle<Scene>,
-}
-
-#[derive(AssetCollection, Resource)]
-struct FontAssets {
-    #[asset(path = "Amatic-Bold.ttf")]
-    main: Handle<Font>,
-}
-
-#[derive(AssetCollection, Resource)]
-struct AudioAssets {
-    #[asset(path = "menu.ogg")]
-    menu: Handle<AudioSource>,
-    #[asset(path = "play.ogg")]
-    game: Handle<AudioSource>,
-    #[asset(path = "flap.ogg")]
-    flap: Handle<AudioSource>,
-    #[asset(path = "badflap.ogg")]
-    badflap: Handle<AudioSource>,
-    #[asset(path = "score.ogg")]
-    score: Handle<AudioSource>,
-    #[asset(path = "crash.ogg")]
-    crash: Handle<AudioSource>,
-    #[asset(path = "bump.ogg")]
-    bump: Handle<AudioSource>,
-}
 
 #[derive(Component)]
 struct MusicController;
@@ -60,6 +31,7 @@ struct MusicController;
 enum AppState {
     #[default]
     Loading,
+    Pipelines,
     StartScreen,
     Playing,
     #[cfg(feature = "inspector")]
@@ -162,12 +134,7 @@ fn main() {
 
     app.add_state::<AppState>();
 
-    app.add_loading_state(
-        LoadingState::new(AppState::Loading).continue_to_state(AppState::StartScreen),
-    );
-    app.add_collection_to_loading_state::<_, GltfAssets>(AppState::Loading);
-    app.add_collection_to_loading_state::<_, FontAssets>(AppState::Loading);
-    app.add_collection_to_loading_state::<_, AudioAssets>(AppState::Loading);
+    app.add_plugins(LoadingPlugin);
 
     #[cfg(feature = "inspector")]
     {

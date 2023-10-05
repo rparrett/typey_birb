@@ -1,4 +1,4 @@
-use bevy::render::primitives::Aabb;
+use bevy::{prelude::*, render::primitives::Aabb};
 
 pub fn collide_aabb(a: &Aabb, b: &Aabb) -> bool {
     let a_min = a.min();
@@ -12,4 +12,10 @@ pub fn collide_aabb(a: &Aabb, b: &Aabb) -> bool {
         && a_min.y < b_max.y
         && a_max.z > b_min.z
         && a_min.z < b_max.z
+}
+
+pub fn cleanup<T: Component>(mut commands: Commands, query: Query<Entity, With<T>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
 }
