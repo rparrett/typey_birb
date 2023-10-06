@@ -18,7 +18,7 @@ impl Plugin for UiPlugin {
         app.add_systems(Update, update_targets);
         app.add_systems(Update, update_score);
 
-        app.add_systems(OnExit(AppState::Loading), setup);
+        app.add_systems(OnExit(AppState::LoadingAssets), setup);
 
         app.add_systems(OnEnter(AppState::StartScreen), start_screen);
         app.add_systems(OnExit(AppState::StartScreen), despawn_start_screen);

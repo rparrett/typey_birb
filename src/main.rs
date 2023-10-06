@@ -30,16 +30,14 @@ struct MusicController;
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum AppState {
     #[default]
-    Loading,
-    Pipelines,
+    LoadingAssets,
+    LoadingPipelines,
     StartScreen,
     Playing,
     #[cfg(feature = "inspector")]
     Paused,
     EndScreen,
 }
-
-// Components
 
 #[derive(Component)]
 struct Birb;

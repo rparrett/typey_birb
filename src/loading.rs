@@ -49,24 +49,25 @@ pub struct LoadingPlugin;
 impl Plugin for LoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::Loading).continue_to_state(AppState::Pipelines),
+            LoadingState::new(AppState::LoadingAssets)
+                .continue_to_state(AppState::LoadingPipelines),
         );
-        app.add_collection_to_loading_state::<_, GltfAssets>(AppState::Loading);
-        app.add_collection_to_loading_state::<_, FontAssets>(AppState::Loading);
-        app.add_collection_to_loading_state::<_, AudioAssets>(AppState::Loading);
+        app.add_collection_to_loading_state::<_, GltfAssets>(AppState::LoadingAssets);
+        app.add_collection_to_loading_state::<_, FontAssets>(AppState::LoadingAssets);
+        app.add_collection_to_loading_state::<_, AudioAssets>(AppState::LoadingAssets);
 
         app.add_plugins(PipelinesReadyPlugin);
 
         app.add_systems(Startup, loading);
 
-        app.add_systems(OnEnter(AppState::Pipelines), preload);
+        app.add_systems(OnEnter(AppState::LoadingPipelines), preload);
         app.add_systems(
             Update,
             check_pipelines
-                .run_if(in_state(AppState::Pipelines))
+                .run_if(in_state(AppState::LoadingPipelines))
                 .run_if(resource_changed::<PipelinesReady>()),
         );
-        app.add_systems(OnExit(AppState::Pipelines), cleanup::<LoadingOnly>);
+        app.add_systems(OnExit(AppState::LoadingPipelines), cleanup::<LoadingOnly>);
     }
 }
 
