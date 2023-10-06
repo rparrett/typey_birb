@@ -52,7 +52,7 @@ impl Plugin for GroundPlugin {
             (ground_movement, spawn_ground.after(ground_movement))
                 .run_if(in_state(AppState::Playing)),
         );
-        app.add_systems(OnExit(AppState::Loading), setup);
+        app.add_systems(OnEnter(AppState::Pipelines), setup);
     }
 }
 

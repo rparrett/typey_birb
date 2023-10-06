@@ -157,7 +157,7 @@ fn main() {
         .add_plugins(crate::ui::UiPlugin)
         .add_plugins(crate::ground::GroundPlugin);
 
-    app.add_systems(OnExit(AppState::Loading), setup);
+    app.add_systems(Startup, setup);
 
     app.add_systems(
         OnEnter(AppState::StartScreen),

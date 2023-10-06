@@ -57,7 +57,7 @@ impl Plugin for LoadingPlugin {
 
         app.add_plugins(PipelinesReadyPlugin);
 
-        app.add_systems(OnEnter(AppState::Loading), loading);
+        app.add_systems(Startup, loading);
 
         app.add_systems(OnEnter(AppState::Pipelines), preload);
         app.add_systems(
