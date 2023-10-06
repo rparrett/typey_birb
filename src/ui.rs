@@ -477,7 +477,7 @@ fn decorate_rival_portrait(
     for (entity, instance) in undecorated.iter() {
         if spawner.instance_is_ready(**instance) {
             for instance_entity in spawner.iter_instance_entities(**instance) {
-                if let Ok(_) = mesh_query.get(instance_entity) {
+                if mesh_query.get(instance_entity).is_ok() {
                     commands.entity(instance_entity).insert(NotShadowCaster);
                 }
             }
