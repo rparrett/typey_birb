@@ -3,7 +3,7 @@ use crate::{
     util::cleanup,
     Action, AppState, FontAssets, GltfAssets, Score,
 };
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{pbr::NotShadowCaster, prelude::*, scene::SceneInstance, utils::HashSet};
 
 pub struct UiPlugin;
 
@@ -13,11 +13,17 @@ struct ScoreText;
 struct StartScreenOnly;
 #[derive(Component)]
 struct EndScreenOnly;
+#[derive(Component)]
+struct RivalPortrait;
+#[derive(Component)]
+struct Decorated;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, update_targets);
         app.add_systems(Update, update_score);
+        // Must run after SpawnScene schedule.
+        app.add_systems(PostUpdate, decorate_rival_portrait);
 
         app.add_systems(OnExit(AppState::LoadingAssets), setup);
 
@@ -44,6 +50,7 @@ fn start_screen(
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
             ..default()
         },
+        RivalPortrait,
         StartScreenOnly,
     ));
 
@@ -169,6 +176,7 @@ fn end_sceen(
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
             ..default()
         },
+        RivalPortrait,
         EndScreenOnly,
     ));
 
@@ -456,4 +464,25 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
     commands.entity(root).push_children(&[topbar, bottombar]);
     commands.entity(topbar).push_children(&[toptext, scoretext]);
     commands.entity(bottombar).push_children(&[bottomtext]);
+}
+
+fn decorate_rival_portrait(
+    undecorated: Query<(Entity, &SceneInstance), (Without<Decorated>, With<RivalPortrait>)>,
+    spawner: Res<SceneSpawner>,
+
+    mut commands: Commands,
+
+    mesh_query: Query<(), With<Handle<Mesh>>>,
+) {
+    for (entity, instance) in undecorated.iter() {
+        if spawner.instance_is_ready(**instance) {
+            for instance_entity in spawner.iter_instance_entities(**instance) {
+                if mesh_query.get(instance_entity).is_ok() {
+                    commands.entity(instance_entity).insert(NotShadowCaster);
+                }
+            }
+
+            commands.entity(entity).insert(Decorated);
+        }
+    }
 }
