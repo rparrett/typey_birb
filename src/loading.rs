@@ -57,16 +57,40 @@ impl Plugin for LoadingPlugin {
 
         app.add_plugins(PipelinesReadyPlugin);
 
+        app.add_systems(OnEnter(AppState::Loading), loading);
+
+        app.add_systems(OnEnter(AppState::Pipelines), preload);
         app.add_systems(
             Update,
             check_pipelines
                 .run_if(in_state(AppState::Pipelines))
                 .run_if(resource_changed::<PipelinesReady>()),
         );
-
-        app.add_systems(OnEnter(AppState::Pipelines), preload);
         app.add_systems(OnExit(AppState::Pipelines), cleanup::<LoadingOnly>);
     }
+}
+
+fn loading(mut commands: Commands) {
+    commands.spawn((
+        TextBundle {
+            text: Text::from_section(
+                "Loading...",
+                TextStyle {
+                    font_size: 20.,
+                    ..default()
+                },
+            ),
+            style: Style {
+                position_type: PositionType::Absolute,
+                bottom: Val::Px(5.),
+                left: Val::Px(5.),
+                ..default()
+            },
+            z_index: ZIndex::Global(100),
+            ..default()
+        },
+        LoadingOnly,
+    ));
 }
 
 fn preload(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
