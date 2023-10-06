@@ -1,5 +1,6 @@
 use crate::{
     typing::{TypingTarget, WordList},
+    util::cleanup,
     Action, AppState, FontAssets, GltfAssets, Score,
 };
 use bevy::{prelude::*, utils::HashSet};
@@ -9,9 +10,9 @@ pub struct UiPlugin;
 #[derive(Component)]
 struct ScoreText;
 #[derive(Component)]
-struct StartScreen;
+struct StartScreenOnly;
 #[derive(Component)]
-struct EndScreen;
+struct EndScreenOnly;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
@@ -21,22 +22,10 @@ impl Plugin for UiPlugin {
         app.add_systems(OnExit(AppState::LoadingAssets), setup);
 
         app.add_systems(OnEnter(AppState::StartScreen), start_screen);
-        app.add_systems(OnExit(AppState::StartScreen), despawn_start_screen);
+        app.add_systems(OnExit(AppState::StartScreen), cleanup::<StartScreenOnly>);
 
-        app.add_systems(OnEnter(AppState::EndScreen), death_screen);
-        app.add_systems(OnExit(AppState::EndScreen), despawn_dead_screen);
-    }
-}
-
-fn despawn_dead_screen(mut commands: Commands, query: Query<Entity, With<EndScreen>>) {
-    for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
-    }
-}
-
-fn despawn_start_screen(mut commands: Commands, query: Query<Entity, With<StartScreen>>) {
-    for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
+        app.add_systems(OnEnter(AppState::EndScreen), end_sceen);
+        app.add_systems(OnExit(AppState::EndScreen), cleanup::<EndScreenOnly>);
     }
 }
 
@@ -55,7 +44,7 @@ fn start_screen(
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
             ..default()
         },
-        StartScreen,
+        StartScreenOnly,
     ));
 
     // text
@@ -76,7 +65,7 @@ fn start_screen(
                 },
                 ..Default::default()
             },
-            StartScreen,
+            StartScreenOnly,
         ))
         .id();
 
@@ -154,7 +143,7 @@ fn start_screen(
     commands.entity(bg).push_children(&[starttext, starttarget]);
 }
 
-fn death_screen(
+fn end_sceen(
     mut commands: Commands,
     gltf_assets: Res<GltfAssets>,
     font_assets: Res<FontAssets>,
@@ -180,7 +169,7 @@ fn death_screen(
                 .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
             ..default()
         },
-        EndScreen,
+        EndScreenOnly,
     ));
 
     // text
@@ -201,7 +190,7 @@ fn death_screen(
                 },
                 ..Default::default()
             },
-            EndScreen,
+            EndScreenOnly,
         ))
         .id();
 
