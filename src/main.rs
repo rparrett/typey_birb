@@ -3,7 +3,7 @@
 
 use bevy::{
     log::{Level, LogPlugin},
-    math::Vec3A,
+    math::{Vec3A, Vec3Swizzles},
     pbr::CascadeShadowConfigBuilder,
     prelude::*,
     render::primitives::Aabb,
@@ -101,6 +101,13 @@ impl Speed {
     }
 }
 
+#[derive(Component)]
+struct Orbit {
+    angle: f32,
+    distance: f32,
+    origin: Vec2,
+}
+
 const BIRB_START_Y: f32 = 3.;
 
 const BIRB_MIN_Y: f32 = 0.9;
@@ -184,7 +191,12 @@ fn main() {
 
     app.add_systems(
         Update,
-        (rival_movement, retry_game, bad_flap_sound).run_if(in_state(AppState::EndScreen)),
+        (retry_game, bad_flap_sound).run_if(in_state(AppState::EndScreen)),
+    );
+
+    app.add_systems(
+        Update,
+        rival_movement_end_screen.run_if(in_state(AppState::EndScreen)),
     );
 
     app.add_systems(OnExit(AppState::EndScreen), reset);
@@ -238,6 +250,68 @@ fn rival_movement(mut query: Query<&mut Transform, With<Rival>>, time: Res<Time>
         transform.translation.y = 4. + floaty;
 
         transform.rotation = Quat::from_rotation_z(time.elapsed_seconds().cos() / 4.)
+    }
+}
+
+fn rival_movement_end_screen(
+    mut query: Query<&mut Transform, (With<Rival>, Without<Obstacle>)>,
+    obstacle_query: Query<&Transform, With<Obstacle>>,
+    time: Res<Time>,
+    mut maybe_orbit: Local<Option<Orbit>>,
+) {
+    let rival = query.single();
+
+    if maybe_orbit.is_none() {
+        let closest_obstacle = obstacle_query
+            .iter()
+            .map(|t| {
+                (
+                    t.translation.xz().distance_squared(rival.translation.xz()),
+                    t.translation.xz(),
+                )
+            })
+            .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
+            .unwrap();
+
+        *maybe_orbit = Some(Orbit {
+            angle: closest_obstacle.1.angle_between(rival.translation.xz()),
+            origin: closest_obstacle.1,
+            distance: closest_obstacle.0.sqrt(),
+        })
+    }
+    let orbit = maybe_orbit.as_mut().unwrap();
+
+    // Convert speed to angular speed.
+    let speed = 5. / std::f32::consts::TAU / orbit.distance * 2.;
+    let step = speed * time.delta_seconds();
+
+    for mut transform in query.iter_mut() {
+        orbit.angle += step;
+
+        let (sin, cos) = orbit.angle.sin_cos();
+
+        transform.translation.x = sin * orbit.distance + orbit.origin.x;
+        transform.translation.z = cos * orbit.distance + orbit.origin.y;
+
+        // face direction of movement
+        let y_rot = transform.rotation.to_euler(EulerRot::XYZ).1;
+        let diff = orbit.angle - y_rot;
+
+        let next_y_rot = if diff.abs() < step {
+            y_rot + step * diff.signum()
+        } else {
+            orbit.angle
+        };
+
+        transform.rotation = Quat::from_euler(
+            EulerRot::XYZ,
+            0.,
+            next_y_rot,
+            time.elapsed_seconds().cos() / 4.,
+        );
+
+        let floaty = time.elapsed_seconds().sin();
+        transform.translation.y = 4. + floaty;
     }
 }
 
