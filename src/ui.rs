@@ -467,11 +467,9 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
 }
 
 fn decorate_rival_portrait(
-    undecorated: Query<(Entity, &SceneInstance), (Without<Decorated>, With<RivalPortrait>)>,
-    spawner: Res<SceneSpawner>,
-
     mut commands: Commands,
-
+    spawner: Res<SceneSpawner>,
+    undecorated: Query<(Entity, &SceneInstance), (Without<Decorated>, With<RivalPortrait>)>,
     mesh_query: Query<(), With<Handle<Mesh>>>,
 ) {
     for (entity, instance) in undecorated.iter() {
