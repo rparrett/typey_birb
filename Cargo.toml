@@ -11,9 +11,9 @@ license = "MIT OR Apache-2.0"
 inspector = ["bevy-inspector-egui"]
 
 [dependencies]
-bevy = { version = "0.11", features = ["jpeg"] }
-bevy-inspector-egui = { version = "0.19", optional = true }
-bevy_asset_loader = "0.17"
-bevy_pipelines_ready = "0.1.1"
+bevy = { version = "0.12", features = ["jpeg"] }
+bevy-inspector-egui = { version = "0.21", optional = true }
+bevy_asset_loader = { git = "https://github.com/NiklasEi/bevy_asset_loader", branch = "bevy_main" }
+bevy_pipelines_ready = "0.2.0"
 
 rand = "0.8"
