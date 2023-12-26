@@ -332,7 +332,7 @@ fn bad_flap_sound(
     audio_assets: Res<AudioAssets>,
     mut events: EventReader<Action>,
 ) {
-    for e in events.iter() {
+    for e in events.read() {
         if let Action::BadFlap = e {
             commands.spawn(AudioBundle {
                 source: audio_assets.badflap.clone(),
@@ -670,7 +670,7 @@ fn movement(
 }
 
 fn retry_game(mut events: EventReader<Action>, mut next_state: ResMut<NextState<AppState>>) {
-    for e in events.iter() {
+    for e in events.read() {
         if let Action::Retry = e {
             next_state.set(AppState::StartScreen);
         }
@@ -678,7 +678,7 @@ fn retry_game(mut events: EventReader<Action>, mut next_state: ResMut<NextState<
 }
 
 fn start_game(mut events: EventReader<Action>, mut next_state: ResMut<NextState<AppState>>) {
-    for e in events.iter() {
+    for e in events.read() {
         if let Action::Start = e {
             next_state.set(AppState::Playing);
         }
@@ -686,7 +686,7 @@ fn start_game(mut events: EventReader<Action>, mut next_state: ResMut<NextState<
 }
 
 fn update_score(mut events: EventReader<Action>, mut score: ResMut<Score>) {
-    for e in events.iter() {
+    for e in events.read() {
         if let Action::IncScore(inc) = e {
             score.0 += inc
         }
@@ -699,7 +699,7 @@ fn update_target_position(
     mut query: Query<&mut TargetPosition>,
     audio_assets: Res<AudioAssets>,
 ) {
-    for e in events.iter() {
+    for e in events.read() {
         match e {
             Action::BirbUp => {
                 for mut target in query.iter_mut() {

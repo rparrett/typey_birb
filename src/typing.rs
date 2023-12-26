@@ -92,7 +92,7 @@ fn new_words(
     mut query: Query<(Entity, &mut TypingTarget)>,
     mut wordlist: ResMut<WordList>,
 ) {
-    for e in events.iter() {
+    for e in events.read() {
         if let crate::Action::NewWord(entity) = e {
             // build a list of characters to avoid for the next word,
             // skipping the word we're replacing.
@@ -115,7 +115,7 @@ fn keyboard(
     mut query: Query<(Entity, &mut TypingTarget)>,
     mut events: EventWriter<crate::Action>,
 ) {
-    for event in char_input_events.iter() {
+    for event in char_input_events.read() {
         let mut ok = false;
 
         for (entity, mut target) in query.iter_mut() {
