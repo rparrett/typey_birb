@@ -1,8 +1,5 @@
-#![allow(clippy::type_complexity)]
-#![allow(clippy::too_many_arguments)]
-
 use bevy::{
-    log::{Level, LogPlugin},
+    asset::AssetMetaCheck,
     math::{Vec3A, Vec3Swizzles},
     pbr::CascadeShadowConfigBuilder,
     prelude::*,
@@ -120,24 +117,22 @@ const GAP_START_MAX_Y: f32 = 6.7 - GAP_SIZE;
 fn main() {
     let mut app = App::new();
 
+    // Workaround for Bevy attempting to load .meta files in wasm builds. On itch,
+    // the CDN serves HTTP 403 errors instead of 404 when files don't exist, which
+    // causes Bevy to break.
+    app.insert_resource(AssetMetaCheck::Never);
+
     app.insert_resource(ClearColor(Color::rgb_u8(177, 214, 222)));
 
-    app.add_plugins(
-        DefaultPlugins
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "Typey Birb".into(),
-                    ..Default::default()
-                }),
-                ..default()
-            })
-            .set(LogPlugin {
-                level: Level::INFO,
-                ..Default::default()
-            }),
-    );
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Typey Birb".into(),
+            ..Default::default()
+        }),
+        ..default()
+    }));
 
-    app.add_state::<AppState>();
+    app.init_state::<AppState>();
 
     app.add_plugins(LoadingPlugin);
 
@@ -206,7 +201,7 @@ fn main() {
 
 #[cfg(feature = "inspector")]
 fn pause(
-    mut keyboard: ResMut<Input<KeyCode>>,
+    mut keyboard: ResMut<ButtonInput<KeyCode>>,
     state: Res<State<AppState>>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
@@ -483,51 +478,47 @@ fn spawn_obstacle(
 
     let bottom_height = gap_start;
     let bottom_cylinder = meshes.add(
-        shape::Cylinder {
+        Cylinder {
             radius: 0.75,
-            resolution: 16,
-            segments: 1,
-            height: bottom_height,
+            half_height: bottom_height / 2.,
         }
-        .into(),
+        .mesh()
+        .resolution(16)
+        .segments(1)
+        .build(),
     );
     let bottom_y = bottom_height / 2.;
 
     let top_height = 10. - gap_start - GAP_SIZE;
     let top_cylinder = meshes.add(
-        shape::Cylinder {
+        Cylinder {
             radius: 0.75,
-            resolution: 16,
-            segments: 1,
-            height: top_height,
+            half_height: top_height / 2.,
         }
-        .into(),
+        .mesh()
+        .resolution(16)
+        .segments(1)
+        .build(),
     );
     let top_y = gap_start + GAP_SIZE + top_height / 2.;
 
     let flange = meshes.add(
-        shape::Cylinder {
+        Cylinder {
             radius: flange_radius,
-            resolution: 16,
-            segments: 1,
-            height: flange_height,
+            half_height: flange_height / 2.,
         }
-        .into(),
+        .mesh()
+        .resolution(16)
+        .segments(1)
+        .build(),
     );
     let bottom_flange_y = gap_start - flange_height / 2.;
     let top_flange_y = gap_start + GAP_SIZE + flange_height / 2.;
 
-    let middle = meshes.add(
-        shape::Box {
-            min_x: -0.1,
-            max_x: 1.0,
-            min_y: gap_start,
-            max_y: gap_start + GAP_SIZE,
-            min_z: -0.5,
-            max_z: 0.5,
-        }
-        .into(),
-    );
+    let middle = meshes.add(Cuboid::from_corners(
+        Vec3::new(0.1, gap_start, -0.5),
+        Vec3::new(1.0, gap_start + GAP_SIZE, 0.5),
+    ));
 
     commands
         .spawn(SpatialBundle {
@@ -539,7 +530,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., bottom_y, 0.),
                     mesh: bottom_cylinder,
-                    material: materials.add(Color::GREEN.into()),
+                    material: materials.add(Color::GREEN),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -548,7 +539,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., bottom_flange_y, 0.),
                     mesh: flange.clone(),
-                    material: materials.add(Color::GREEN.into()),
+                    material: materials.add(Color::GREEN),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -558,7 +549,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., top_y, 0.),
                     mesh: top_cylinder,
-                    material: materials.add(Color::GREEN.into()),
+                    material: materials.add(Color::GREEN),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -567,7 +558,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., top_flange_y, 0.),
                     mesh: flange.clone(),
-                    material: materials.add(Color::GREEN.into()),
+                    material: materials.add(Color::GREEN),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -577,7 +568,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     mesh: middle.clone(),
                     visibility: Visibility::Hidden,
-                    material: materials.add(Color::PINK.into()),
+                    material: materials.add(Color::PINK),
                     ..default()
                 },
                 ScoreCollider,
@@ -753,7 +744,7 @@ fn setup(mut commands: Commands) {
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             shadows_enabled: true,
-            illuminance: 5000.,
+            illuminance: 1000.,
             ..Default::default()
         },
         cascade_shadow_config: CascadeShadowConfigBuilder {

@@ -119,23 +119,31 @@ fn keyboard(
         let mut ok = false;
 
         for (entity, mut target) in query.iter_mut() {
-            if let Some(next) = target.current_char() {
-                if next == event.char {
-                    for action in target.letter_actions.iter() {
-                        events.send(action.clone());
-                    }
+            let Some(next) = target.current_char() else {
+                continue;
+            };
 
-                    if target.advance_char().is_none() {
-                        events.send(crate::Action::NewWord(entity));
+            let Some(char) = event.char.chars().last() else {
+                continue;
+            };
 
-                        for action in target.word_actions.iter() {
-                            events.send(action.clone());
-                        }
-                    }
+            if next != char {
+                continue;
+            }
 
-                    ok = true;
+            for action in target.letter_actions.iter() {
+                events.send(action.clone());
+            }
+
+            if target.advance_char().is_none() {
+                events.send(crate::Action::NewWord(entity));
+
+                for action in target.word_actions.iter() {
+                    events.send(action.clone());
                 }
             }
+
+            ok = true;
         }
 
         if !ok {

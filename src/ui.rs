@@ -163,7 +163,7 @@ fn end_sceen(
     } else if score.0 > 200 {
         "Not bad, kid!\nThere may be room for you in the flock\nas an unpaid apprentice."
     } else {
-        "Oh wow, ouch!\nIt's a shame you can't move left or right,\nthe path is a bit clearer over here!"
+        "Oh wow, ouch!\nIt's a shame you can't move side to side,\nthe path is a bit clearer over here!"
     };
 
     // rival

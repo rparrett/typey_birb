@@ -11,9 +11,12 @@ license = "MIT OR Apache-2.0"
 inspector = ["bevy-inspector-egui"]
 
 [dependencies]
-bevy = { version = "0.12", features = ["jpeg"] }
-bevy-inspector-egui = { version = "0.21", optional = true }
-bevy_asset_loader = "0.18.0"
-bevy_pipelines_ready = "0.2.0"
+bevy = { version = "0.13", features = ["jpeg"] }
+bevy-inspector-egui = { version = "0.23", optional = true }
+bevy_asset_loader = "0.20.0"
+bevy_pipelines_ready = "0.3"
 
 rand = "0.8"
+
+[lints.clippy]
+type_complexity = "allow"

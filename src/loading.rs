@@ -50,11 +50,11 @@ impl Plugin for LoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
             LoadingState::new(AppState::LoadingAssets)
+                .load_collection::<GltfAssets>()
+                .load_collection::<FontAssets>()
+                .load_collection::<AudioAssets>()
                 .continue_to_state(AppState::LoadingPipelines),
         );
-        app.add_collection_to_loading_state::<_, GltfAssets>(AppState::LoadingAssets);
-        app.add_collection_to_loading_state::<_, FontAssets>(AppState::LoadingAssets);
-        app.add_collection_to_loading_state::<_, AudioAssets>(AppState::LoadingAssets);
 
         app.add_plugins(PipelinesReadyPlugin);
 
@@ -65,7 +65,7 @@ impl Plugin for LoadingPlugin {
             Update,
             check_pipelines
                 .run_if(in_state(AppState::LoadingPipelines))
-                .run_if(resource_changed::<PipelinesReady>()),
+                .run_if(resource_changed::<PipelinesReady>),
         );
         app.add_systems(OnExit(AppState::LoadingPipelines), cleanup::<LoadingOnly>);
     }

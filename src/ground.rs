@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use bevy::{
     prelude::*,
-    render::{mesh::Indices, render_resource::PrimitiveTopology},
+    render::{mesh::Indices, render_asset::RenderAssetUsages, render_resource::PrimitiveTopology},
 };
 use rand::{thread_rng, Rng};
 
@@ -35,7 +35,7 @@ impl GroundBundle {
                     UVec2::new(GROUND_VERTICES_X, GROUND_VERTICES_Z),
                 )),
                 transform: Transform::from_xyz(x, 0.1, 0.),
-                material: materials.add(Color::rgb(0.63, 0.96, 0.26).into()),
+                material: materials.add(Color::rgb(0.63, 0.96, 0.26)),
                 ..Default::default()
             },
             ground: Ground,
@@ -148,8 +148,11 @@ pub fn ground_mesh(size: Vec2, num_vertices: UVec2) -> Mesh {
         }
     }
 
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-    mesh.set_indices(Some(Indices::U32(indices)));
+    let mut mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
+    );
+    mesh.insert_indices(Indices::U32(indices));
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
