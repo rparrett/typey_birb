@@ -8,13 +8,9 @@ Completed in ~2 days for Bevy Jam #1.
 
 ## TODO
 
-- [X] just release the thing, we're out of time!
 - [ ] hero should bob up and down very slightly while cruising
 - [ ] add sfx / music mute buttons
-- [ ] fix unseemly flat seam in terrain
-- [ ] rival should do a loop around the obstacle and face towards hero on death
-- [ ] jazz up html
-- [ ] is it too late to find someone who knows literally anything about music?
+- [ ] the music is so bad
 
 ## Acknowledgements
 
