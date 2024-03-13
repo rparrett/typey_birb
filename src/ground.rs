@@ -8,51 +8,48 @@ use rand::{thread_rng, Rng};
 
 use crate::{AppState, Speed};
 
-pub const GROUND_LENGTH: f32 = 60.;
+const GROUND_LENGTH: f32 = 60.;
 const GROUND_WIDTH: f32 = 40.;
 const GROUND_VERTICES_X: u32 = 30;
 const GROUND_VERTICES_Z: u32 = 20;
 
-#[derive(Component)]
-pub struct Ground;
+#[derive(Resource)]
+pub struct GroundMesh(Handle<Mesh>);
+impl FromWorld for GroundMesh {
+    fn from_world(world: &mut World) -> Self {
+        let mut meshes = world.resource_mut::<Assets<Mesh>>();
 
-#[derive(Bundle)]
-pub struct GroundBundle {
-    pbr: PbrBundle,
-    ground: Ground,
-}
-
-impl GroundBundle {
-    pub fn new(
-        x: f32,
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut materials: ResMut<Assets<StandardMaterial>>,
-    ) -> GroundBundle {
-        Self {
-            pbr: PbrBundle {
-                mesh: meshes.add(ground_mesh(
-                    Vec2::new(GROUND_LENGTH, GROUND_WIDTH),
-                    UVec2::new(GROUND_VERTICES_X, GROUND_VERTICES_Z),
-                )),
-                transform: Transform::from_xyz(x, 0.1, 0.),
-                material: materials.add(Color::rgb(0.63, 0.96, 0.26)),
-                ..Default::default()
-            },
-            ground: Ground,
-        }
+        Self(meshes.add(ground_mesh(
+            Vec2::new(GROUND_LENGTH, GROUND_WIDTH),
+            UVec2::new(GROUND_VERTICES_X, GROUND_VERTICES_Z),
+        )))
     }
 }
+
+#[derive(Resource)]
+pub struct GroundMaterial(Handle<StandardMaterial>);
+impl FromWorld for GroundMaterial {
+    fn from_world(world: &mut World) -> Self {
+        let mut materials = world.resource_mut::<Assets<StandardMaterial>>();
+        Self(materials.add(Color::rgb(0.63, 0.96, 0.26)))
+    }
+}
+
+#[derive(Component)]
+pub struct Ground;
 
 pub struct GroundPlugin;
 
 impl Plugin for GroundPlugin {
     fn build(&self, app: &mut App) {
+        app.init_resource::<GroundMaterial>();
+        app.init_resource::<GroundMesh>();
         app.add_systems(
             Update,
             (ground_movement, spawn_ground.after(ground_movement))
                 .run_if(in_state(AppState::Playing)),
         );
-        app.add_systems(OnEnter(AppState::LoadingPipelines), setup);
+        app.add_systems(OnEnter(AppState::LoadingPipelines), spawn_ground);
     }
 }
 
@@ -74,8 +71,8 @@ fn ground_movement(
 
 fn spawn_ground(
     mut commands: Commands,
-    meshes: ResMut<Assets<Mesh>>,
-    materials: ResMut<Assets<StandardMaterial>>,
+    mesh: Res<GroundMesh>,
+    material: Res<GroundMaterial>,
     query: Query<&Transform, With<Ground>>,
 ) {
     // keep two ground chunks alive at all times
@@ -86,39 +83,40 @@ fn spawn_ground(
 
     let max_x = query
         .iter()
-        .max_by(|a, b| a.translation.x.partial_cmp(&b.translation.x).unwrap())
-        .unwrap()
-        .translation
-        .x;
+        .map(|transform| transform.translation.x)
+        .max_by(|a, b| a.partial_cmp(&b).unwrap())
+        .unwrap_or(-GROUND_LENGTH);
 
-    commands.spawn(GroundBundle::new(max_x + GROUND_LENGTH, meshes, materials));
-}
-
-fn setup(
-    mut commands: Commands,
-    meshes: ResMut<Assets<Mesh>>,
-    materials: ResMut<Assets<StandardMaterial>>,
-) {
-    commands.spawn(GroundBundle::new(0., meshes, materials));
+    commands.spawn((
+        PbrBundle {
+            mesh: mesh.0.clone(),
+            transform: Transform::from_xyz(max_x + GROUND_LENGTH, 0.1, 0.),
+            material: material.0.clone(),
+            ..Default::default()
+        },
+        Ground,
+    ));
 }
 
 pub fn ground_mesh(size: Vec2, num_vertices: UVec2) -> Mesh {
     let num_quads = num_vertices - UVec2::splat(1);
     let offset = size / -2.;
 
-    let h_range: Range<f32> = -0.1..0.1;
+    let h_range: Range<f32> = -0.15..0.15;
 
     let mut rng = thread_rng();
 
-    let mut positions = vec![];
+    let mut positions: Vec<[f32; 3]> = vec![];
     let mut normals = vec![];
     let mut uvs = vec![];
     let mut indices = vec![];
 
     for x in 0..num_vertices.x {
         for z in 0..num_vertices.y {
-            let h = if x == 0 || x == num_vertices.x - 1 {
-                0.0
+            // Use the same height values for the first and last column so that
+            // ground chunks placed next to each other are seamless.
+            let h = if x == num_vertices.x - 1 {
+                positions[z as usize][1]
             } else {
                 rng.gen_range(h_range.clone())
             };
