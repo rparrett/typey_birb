@@ -84,7 +84,7 @@ fn spawn_ground(
     let max_x = query
         .iter()
         .map(|transform| transform.translation.x)
-        .max_by(|a, b| a.partial_cmp(&b).unwrap())
+        .max_by(|a, b| a.partial_cmp(b).unwrap())
         .unwrap_or(-GROUND_LENGTH);
 
     commands.spawn((
