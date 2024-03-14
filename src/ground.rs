@@ -77,7 +77,7 @@ fn spawn_ground(
 ) {
     // keep two ground chunks alive at all times
 
-    if query.iter().count() >= 2 {
+    if query.iter().len() >= 2 {
         return;
     }
 
