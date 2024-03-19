@@ -319,6 +319,7 @@ fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         },
         CurrentRotationZ(0.),
         Rival,
+        Name::new("Rival"),
     ));
 }
 
@@ -402,6 +403,7 @@ fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         CurrentRotationZ(0.),
         aabb,
         Birb,
+        Name::new("Birb"),
     ));
 }
 

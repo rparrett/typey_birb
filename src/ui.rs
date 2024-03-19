@@ -177,6 +177,7 @@ fn end_sceen(
             ..default()
         },
         RivalPortrait,
+        Name::new("RivalPortrait"),
         EndScreenOnly,
     ));
 

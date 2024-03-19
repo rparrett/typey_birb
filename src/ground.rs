@@ -95,6 +95,7 @@ fn spawn_ground(
             ..Default::default()
         },
         Ground,
+        Name::new("Ground"),
     ));
 }
 
