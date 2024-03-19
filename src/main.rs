@@ -515,16 +515,18 @@ fn spawn_obstacle(
     let bottom_flange_y = gap_start - flange_height / 2.;
     let top_flange_y = gap_start + GAP_SIZE + flange_height / 2.;
 
-    let middle = meshes.add(Cuboid::from_corners(
-        Vec3::new(0.1, gap_start, -0.5),
-        Vec3::new(1.0, gap_start + GAP_SIZE, 0.5),
-    ));
+    let middle = meshes.add(Cuboid::new(1.0, GAP_SIZE, 1.0));
+    let middle_y = gap_start + GAP_SIZE / 2.;
 
     commands
-        .spawn(SpatialBundle {
-            transform: Transform::from_xyz(38., 0., 0.),
-            ..default()
-        })
+        .spawn((
+            SpatialBundle {
+                transform: Transform::from_xyz(38., 0., 0.),
+                ..default()
+            },
+            Obstacle,
+            Name::new("Obstacle"),
+        ))
         .with_children(|parent| {
             parent.spawn((
                 PbrBundle {
@@ -563,18 +565,18 @@ fn spawn_obstacle(
                 },
                 ObstacleCollider,
             ));
-
             parent.spawn((
                 PbrBundle {
+                    transform: Transform::from_xyz(0., middle_y, 0.),
                     mesh: middle.clone(),
                     visibility: Visibility::Hidden,
-                    material: materials.add(Color::PINK),
+                    material: materials.add(Color::PINK.with_a(0.5)),
                     ..default()
                 },
                 ScoreCollider,
+                Name::new("ScoreCollider"),
             ));
-        })
-        .insert(Obstacle);
+        });
 }
 
 fn obstacle_movement(
