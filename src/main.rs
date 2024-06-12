@@ -3,6 +3,7 @@
 
 use bevy::{
     asset::AssetMetaCheck,
+    color::palettes::css::{DEEP_PINK, LIMEGREEN},
     math::{Vec3A, Vec3Swizzles},
     pbr::CascadeShadowConfigBuilder,
     prelude::*,
@@ -120,20 +121,25 @@ const GAP_START_MAX_Y: f32 = 6.7 - GAP_SIZE;
 fn main() {
     let mut app = App::new();
 
-    // Workaround for Bevy attempting to load .meta files in wasm builds. On itch,
-    // the CDN serves HTTP 403 errors instead of 404 when files don't exist, which
-    // causes Bevy to break.
-    app.insert_resource(AssetMetaCheck::Never);
+    app.insert_resource(ClearColor(Color::srgb_u8(177, 214, 222)));
 
-    app.insert_resource(ClearColor(Color::rgb_u8(177, 214, 222)));
-
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            title: "Typey Birb".into(),
-            ..Default::default()
-        }),
-        ..default()
-    }));
+    app.add_plugins(
+        DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Typey Birb".into(),
+                    ..Default::default()
+                }),
+                ..default()
+            })
+            // Workaround for Bevy attempting to load .meta files in wasm builds. On itch,
+            // the CDN serves HTTP 403 errors instead of 404 when files don't exist, which
+            // causes Bevy to break.
+            .set(AssetPlugin {
+                meta_check: AssetMetaCheck::Never,
+                ..default()
+            }),
+    );
 
     app.init_state::<AppState>();
 
@@ -537,7 +543,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., bottom_y, 0.),
                     mesh: bottom_cylinder,
-                    material: materials.add(Color::GREEN),
+                    material: materials.add(Color::from(LIMEGREEN)),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -546,7 +552,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., bottom_flange_y, 0.),
                     mesh: flange.clone(),
-                    material: materials.add(Color::GREEN),
+                    material: materials.add(Color::from(LIMEGREEN)),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -556,7 +562,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., top_y, 0.),
                     mesh: top_cylinder,
-                    material: materials.add(Color::GREEN),
+                    material: materials.add(Color::from(LIMEGREEN)),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -565,7 +571,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., top_flange_y, 0.),
                     mesh: flange.clone(),
-                    material: materials.add(Color::GREEN),
+                    material: materials.add(Color::from(LIMEGREEN)),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -575,7 +581,7 @@ fn spawn_obstacle(
                     transform: Transform::from_xyz(0., middle_y, 0.),
                     mesh: middle.clone(),
                     visibility: Visibility::Hidden,
-                    material: materials.add(Color::PINK.with_a(0.5)),
+                    material: materials.add(Color::from(DEEP_PINK.with_alpha(0.5))),
                     ..default()
                 },
                 ScoreCollider,
