@@ -63,9 +63,12 @@ impl Plugin for LoadingPlugin {
         app.add_systems(OnEnter(AppState::LoadingPipelines), preload);
         app.add_systems(
             Update,
-            check_pipelines
-                .run_if(in_state(AppState::LoadingPipelines))
-                .run_if(resource_changed::<PipelinesReady>),
+            (
+                print_pipelines.run_if(resource_changed::<PipelinesReady>),
+                check_pipelines
+                    .run_if(in_state(AppState::LoadingPipelines))
+                    .run_if(resource_changed::<PipelinesReady>),
+            ),
         );
         app.add_systems(OnExit(AppState::LoadingPipelines), cleanup::<LoadingOnly>);
     }
@@ -113,8 +116,11 @@ fn preload(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     ));
 }
 
+fn print_pipelines(ready: Res<PipelinesReady>) {
+    info!("Pipelines Ready: {}/{}", ready.get(), EXPECTED_PIPELINES);
+}
+
 fn check_pipelines(ready: Res<PipelinesReady>, mut next_state: ResMut<NextState<AppState>>) {
-    info!("Pipelines: {}/{}", ready.get(), EXPECTED_PIPELINES);
     if ready.get() >= EXPECTED_PIPELINES {
         next_state.set(AppState::StartScreen);
     }
