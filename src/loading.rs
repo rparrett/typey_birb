@@ -37,7 +37,7 @@ pub struct AudioAssets {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-const EXPECTED_PIPELINES: usize = 12;
+const EXPECTED_PIPELINES: usize = 14;
 #[cfg(target_arch = "wasm32")]
 const EXPECTED_PIPELINES: usize = 10;
 
