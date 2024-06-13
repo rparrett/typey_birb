@@ -626,8 +626,8 @@ fn movement(
         let dist = target.0.distance(transform.translation);
 
         // if we are not moving, seek a neutral rotation
-        if dist <= std::f32::EPSILON {
-            if rotation.0.abs() <= std::f32::EPSILON {
+        if dist <= f32::EPSILON {
+            if rotation.0.abs() <= f32::EPSILON {
                 continue;
             }
 
