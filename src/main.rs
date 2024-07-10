@@ -3,7 +3,7 @@
 
 use bevy::{
     asset::AssetMetaCheck,
-    color::palettes::css::{DEEP_PINK, LIMEGREEN},
+    color::palettes::css::{DEEP_PINK, LIME},
     math::{Vec3A, Vec3Swizzles},
     pbr::CascadeShadowConfigBuilder,
     prelude::*,
@@ -543,7 +543,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., bottom_y, 0.),
                     mesh: bottom_cylinder,
-                    material: materials.add(Color::from(LIMEGREEN)),
+                    material: materials.add(Color::from(LIME)),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -552,7 +552,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., bottom_flange_y, 0.),
                     mesh: flange.clone(),
-                    material: materials.add(Color::from(LIMEGREEN)),
+                    material: materials.add(Color::from(LIME)),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -562,7 +562,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., top_y, 0.),
                     mesh: top_cylinder,
-                    material: materials.add(Color::from(LIMEGREEN)),
+                    material: materials.add(Color::from(LIME)),
                     ..Default::default()
                 },
                 ObstacleCollider,
@@ -571,7 +571,7 @@ fn spawn_obstacle(
                 PbrBundle {
                     transform: Transform::from_xyz(0., top_flange_y, 0.),
                     mesh: flange.clone(),
-                    material: materials.add(Color::from(LIMEGREEN)),
+                    material: materials.add(Color::from(LIME)),
                     ..Default::default()
                 },
                 ObstacleCollider,

@@ -4,7 +4,7 @@ use crate::{
     Action, AppState, FontAssets, GltfAssets, Score,
 };
 use bevy::{
-    color::palettes::css::LIMEGREEN, pbr::NotShadowCaster, prelude::*, scene::SceneInstance,
+    color::palettes::css::LIME, pbr::NotShadowCaster, prelude::*, scene::SceneInstance,
     utils::HashSet,
 };
 
@@ -129,7 +129,7 @@ fn start_screen(
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: LIMEGREEN.into(),
+                                color: LIME.into(),
                             },
                         },
                         TextSection {
@@ -255,7 +255,7 @@ fn end_sceen(
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: LIMEGREEN.into(),
+                                color: LIME.into(),
                             },
                         },
                         TextSection {
@@ -355,7 +355,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: LIMEGREEN.into(),
+                                color: LIME.into(),
                             },
                         },
                         TextSection {
@@ -408,7 +408,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: LIMEGREEN.into(),
+                                color: LIME.into(),
                             },
                         },
                         TextSection {
