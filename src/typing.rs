@@ -1,4 +1,8 @@
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{
+    input::keyboard::{Key, KeyboardInput},
+    prelude::*,
+    utils::HashSet,
+};
 use rand::prelude::*;
 
 pub struct TypingPlugin;
@@ -111,19 +115,27 @@ fn new_words(
 }
 
 fn keyboard(
-    mut char_input_events: EventReader<ReceivedCharacter>,
+    mut keyboard_events: EventReader<KeyboardInput>,
     mut query: Query<(Entity, &mut TypingTarget)>,
     mut events: EventWriter<crate::Action>,
 ) {
-    for event in char_input_events.read() {
+    for event in keyboard_events.read() {
         let mut ok = false;
+
+        if !event.state.is_pressed() {
+            continue;
+        };
+
+        let Key::Character(ref key_str) = event.logical_key else {
+            continue;
+        };
+
+        let Some(char) = key_str.chars().last() else {
+            continue;
+        };
 
         for (entity, mut target) in query.iter_mut() {
             let Some(next) = target.current_char() else {
-                continue;
-            };
-
-            let Some(char) = event.char.chars().last() else {
                 continue;
             };
 

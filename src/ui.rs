@@ -3,7 +3,10 @@ use crate::{
     util::cleanup,
     Action, AppState, FontAssets, GltfAssets, Score,
 };
-use bevy::{pbr::NotShadowCaster, prelude::*, scene::SceneInstance, utils::HashSet};
+use bevy::{
+    color::palettes::css::LIMEGREEN, pbr::NotShadowCaster, prelude::*, scene::SceneInstance,
+    utils::HashSet,
+};
 
 pub struct UiPlugin;
 
@@ -126,7 +129,7 @@ fn start_screen(
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: Color::GREEN,
+                                color: LIMEGREEN.into(),
                             },
                         },
                         TextSection {
@@ -134,7 +137,7 @@ fn start_screen(
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: Color::rgb_u8(255, 235, 146),
+                                color: Color::srgb_u8(255, 235, 146),
                             },
                         },
                     ],
@@ -252,7 +255,7 @@ fn end_sceen(
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: Color::GREEN,
+                                color: LIMEGREEN.into(),
                             },
                         },
                         TextSection {
@@ -260,7 +263,7 @@ fn end_sceen(
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: Color::rgb_u8(255, 235, 146),
+                                color: Color::srgb_u8(255, 235, 146),
                             },
                         },
                     ],
@@ -352,7 +355,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: Color::GREEN,
+                                color: LIMEGREEN.into(),
                             },
                         },
                         TextSection {
@@ -360,7 +363,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: Color::rgb_u8(255, 235, 146),
+                                color: Color::srgb_u8(255, 235, 146),
                             },
                         },
                     ],
@@ -405,7 +408,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: Color::GREEN,
+                                color: LIMEGREEN.into(),
                             },
                         },
                         TextSection {
@@ -413,7 +416,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: Color::rgb_u8(255, 235, 146),
+                                color: Color::srgb_u8(255, 235, 146),
                             },
                         },
                     ],
@@ -442,7 +445,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                             style: TextStyle {
                                 font: font_assets.main.clone(),
                                 font_size: 40.,
-                                color: Color::rgba(0.8, 0.8, 0.8, 1.0),
+                                color: Color::srgba(0.8, 0.8, 0.8, 1.0),
                             },
                         },
                         TextSection {

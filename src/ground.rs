@@ -31,7 +31,7 @@ pub struct GroundMaterial(Handle<StandardMaterial>);
 impl FromWorld for GroundMaterial {
     fn from_world(world: &mut World) -> Self {
         let mut materials = world.resource_mut::<Assets<StandardMaterial>>();
-        Self(materials.add(Color::rgb(0.63, 0.96, 0.26)))
+        Self(materials.add(Color::srgb(0.63, 0.96, 0.26)))
     }
 }
 
