@@ -18,5 +18,19 @@ bevy_pipelines_ready = "0.4"
 
 rand = "0.8"
 
+# Disable low-severity logs at compile time for performance.
+log = { version = "0.4", features = [
+    "max_level_debug",
+    "release_max_level_warn",
+] }
+
 [lints.clippy]
 type_complexity = "allow"
+
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+[profile.web-dist]
+inherits = "dist"
+opt-level = "s"
