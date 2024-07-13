@@ -38,6 +38,12 @@ jobs:
           wasm-bindgen --no-typescript --out-name bevy_game --out-dir wasm --target web target/wasm32-unknown-unknown/web-dist/${{ env.binary }}.wasm
           cp -r assets wasm/
 
+      - name: Optimize Wasm
+        uses: NiklasEi/wasm-opt-action@v2
+        with:
+          file: target/wasm32-unknown-unknown/web-dist/*.wasm
+          optimize_all: true
+
       - name: Package as a zip
         working-directory: ./wasm
         run: |
