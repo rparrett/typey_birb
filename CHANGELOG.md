@@ -1,9 +1,14 @@
 # Changelog
 
+## 0.5.0 (2024-07-12)
+
+* Upgraded to Bevy 0.14.
+* Disabled the Windows console in release builds
+
 ## 0.4.0 (2023-10-06)
 
 * Upgraded to Bevy 0.11.
-* Fixed a crash on MacOS 14.
+* Fixed a crash on macOS 14.
 * Added pipeline preloading to hopefully fix wonky music when game loads.
 * Rival Birb now does victory laps around the obstacle when you crash.
 * Removed the shadow cast by the Rival Birb dialog portrait.

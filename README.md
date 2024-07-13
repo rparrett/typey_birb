@@ -8,7 +8,7 @@ Completed in ~2 days for Bevy Jam #1.
 
 ## TODO
 
-- [ ] hero should bob up and down very slightly while cruising
+- [X] hero should bob up and down very slightly while cruising
 - [ ] add sfx / music mute buttons
 - [ ] the music is so bad
 
