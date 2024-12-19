@@ -46,13 +46,10 @@ fn start_screen(
     // rival
 
     commands.spawn((
-        SceneBundle {
-            scene: gltf_assets.birb_gold.clone(),
-            transform: Transform::from_xyz(8.4, 4.0, -0.2)
-                .with_scale(Vec3::splat(2.5))
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
-            ..default()
-        },
+        SceneRoot(gltf_assets.birb_gold.clone()),
+        Transform::from_xyz(8.4, 4.0, -0.2)
+            .with_scale(Vec3::splat(2.5))
+            .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
         RivalPortrait,
         StartScreenOnly,
     ));
@@ -61,18 +58,15 @@ fn start_screen(
 
     let container = commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    bottom: Val::Px(0.),
-                    right: Val::Px(0.),
-                    width: Val::Percent(50.0),
-                    height: Val::Percent(70.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..Default::default()
-                },
+            Node {
+                position_type: PositionType::Absolute,
+                bottom: Val::Px(0.),
+                right: Val::Px(0.),
+                width: Val::Percent(50.0),
+                height: Val::Percent(70.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::Column,
                 ..Default::default()
             },
             StartScreenOnly,
@@ -80,8 +74,8 @@ fn start_screen(
         .id();
 
     let bg = commands
-        .spawn(NodeBundle {
-            style: Style {
+        .spawn((
+            Node {
                 width: Val::Percent(70.0),
                 height: Val::Percent(40.0),
                 align_items: AlignItems::FlexStart,
@@ -90,67 +84,50 @@ fn start_screen(
                 padding: UiRect::all(Val::Px(10.0)),
                 ..Default::default()
             },
-            background_color: Color::BLACK.into(),
-            ..Default::default()
-        })
+            BackgroundColor(Color::BLACK.into()),
+        ))
         .id();
 
     let starttext = commands
-        .spawn(TextBundle {
-            style: Style {
-                ..Default::default()
+        .spawn((
+            Text::new(concat!(
+                "So you want to join the flock, eh?\n",
+                "You'll have to beat me first!\n",
+                "Type the word below when you're ready."
+            )),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: 40.,
+                ..default()
             },
-            text: Text {
-                sections: vec![TextSection {
-                    value: "So you want to join the flock, eh?\nYou'll have to beat me first!\nType the word below when you're ready."
-                        .into(),
-                    style: TextStyle {
-                        font: font_assets.main.clone(),
-                        font_size: 40.,
-                        color: Color::WHITE,
-                    },
-                }],
-                ..Default::default()
-            },
-            ..Default::default()
-        })
+            TextColor(Color::WHITE),
+        ))
         .id();
 
     let starttarget = commands
         .spawn((
-            TextBundle {
-                style: Style {
-                    ..Default::default()
-                },
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: "".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: LIME.into(),
-                            },
-                        },
-                        TextSection {
-                            value: "START".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: Color::srgb_u8(255, 235, 146),
-                            },
-                        },
-                    ],
-                    ..Default::default()
-                },
-                ..Default::default()
+            Text::default(),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: 40.,
+                ..default()
             },
+            TextColor(LIME.into()),
             TypingTarget::new_whole("start".into(), vec![Action::Start]),
+        ))
+        .with_child((
+            TextSpan::new("START"),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: 40.,
+                ..default()
+            },
+            TextColor(Color::srgb_u8(255, 235, 146)),
         ))
         .id();
 
-    commands.entity(container).push_children(&[bg]);
-    commands.entity(bg).push_children(&[starttext, starttarget]);
+    commands.entity(container).add_children(&[bg]);
+    commands.entity(bg).add_children(&[starttext, starttarget]);
 }
 
 fn end_sceen(
@@ -160,25 +137,38 @@ fn end_sceen(
     score: Res<Score>,
 ) {
     let death_msg = if score.0 > 1000 {
-        "I... wha... wow!\nWhat am I even doing with my life?\nThe flock is yours, if you'll have us!"
+        concat!(
+            "I... wha... wow!\n,
+            What am I even doing with my life?\n",
+            "The flock is yours, if you'll have us!"
+        )
     } else if score.0 > 400 {
-        "That was a close one!\nWith moves like that, you'll\nfit in well here!"
+        concat!(
+            "That was a close one!\n",
+            "With moves like that, you'll\n",
+            "fit in well here!"
+        )
     } else if score.0 > 200 {
-        "Not bad, kid!\nThere may be room for you in the flock\nas an unpaid apprentice."
+        concat!(
+            "Not bad, kid!\n",
+            "There may be room for you in the flock\n",
+            "as an unpaid apprentice."
+        )
     } else {
-        "Oh wow, ouch!\nIt's a shame you can't move side to side,\nthe path is a bit clearer over here!"
+        concat!(
+            "Oh wow, ouch!\n",
+            "It's a shame you can't move side to side,\n",
+            "the path is a bit clearer over here!"
+        )
     };
 
     // rival
 
     commands.spawn((
-        SceneBundle {
-            scene: gltf_assets.birb_gold.clone(),
-            transform: Transform::from_xyz(8.4, 4.0, -0.2)
-                .with_scale(Vec3::splat(2.5))
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
-            ..default()
-        },
+        SceneRoot(gltf_assets.birb_gold.clone()),
+        Transform::from_xyz(8.4, 4.0, -0.2)
+            .with_scale(Vec3::splat(2.5))
+            .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
         RivalPortrait,
         Name::new("RivalPortrait"),
         EndScreenOnly,
@@ -188,18 +178,15 @@ fn end_sceen(
 
     let container = commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    bottom: Val::Px(0.),
-                    right: Val::Px(0.),
-                    width: Val::Percent(50.0),
-                    height: Val::Percent(70.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..Default::default()
-                },
+            Node {
+                position_type: PositionType::Absolute,
+                bottom: Val::Px(0.),
+                right: Val::Px(0.),
+                width: Val::Percent(50.0),
+                height: Val::Percent(70.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::Column,
                 ..Default::default()
             },
             EndScreenOnly,
@@ -207,8 +194,8 @@ fn end_sceen(
         .id();
 
     let bg = commands
-        .spawn(NodeBundle {
-            style: Style {
+        .spawn((
+            Node {
                 width: Val::Percent(70.0),
                 height: Val::Percent(40.0),
                 align_items: AlignItems::FlexStart,
@@ -217,66 +204,44 @@ fn end_sceen(
                 padding: UiRect::all(Val::Px(10.0)),
                 ..Default::default()
             },
-            background_color: Color::BLACK.into(),
-            ..Default::default()
-        })
-        .id();
-
-    let deadtext = commands
-        .spawn(TextBundle {
-            style: Style {
-                ..Default::default()
-            },
-            text: Text {
-                sections: vec![TextSection {
-                    value: death_msg.into(),
-                    style: TextStyle {
-                        font: font_assets.main.clone(),
-                        font_size: 40.,
-                        color: Color::WHITE,
-                    },
-                }],
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .id();
-
-    let retrytext = commands
-        .spawn((
-            TextBundle {
-                style: Style {
-                    ..Default::default()
-                },
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: "".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: LIME.into(),
-                            },
-                        },
-                        TextSection {
-                            value: "RETRY".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: Color::srgb_u8(255, 235, 146),
-                            },
-                        },
-                    ],
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            TypingTarget::new_whole("retry".into(), vec![Action::Retry]),
+            BackgroundColor(Color::BLACK.into()),
         ))
         .id();
 
-    commands.entity(container).push_children(&[bg]);
-    commands.entity(bg).push_children(&[deadtext, retrytext]);
+    let deadtext = commands.spawn((
+        Text::new(death_msg),
+        TextFont {
+            font: font_assets.main.clone(),
+            font_size: 40.,
+            ..default()
+        },
+        TextColor(Color::WHITE),
+    ));
+
+    let retrytext = commands
+        .spawn((
+            Text::default(),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: 40.,
+                ..default()
+            },
+            TextColor(LIME.into()),
+            TypingTarget::new_whole("retry".into(), vec![Action::Retry]),
+        ))
+        .with_child((
+            TextSpan::new("RETRY"),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: 40.,
+                ..default()
+            },
+            TextColor(Color::srgb_u8(255, 235, 146)),
+        ))
+        .id();
+
+    commands.entity(container).add_children(&[bg]);
+    commands.entity(bg).add_children(&[deadtext, retrytext]);
 }
 
 fn update_score(mut query: Query<&mut Text, With<ScoreText>>, score: Res<Score>) {
@@ -290,15 +255,13 @@ fn update_score(mut query: Query<&mut Text, With<ScoreText>>, score: Res<Score>)
 
 fn update_targets(
     query: Query<(Entity, &TypingTarget), Changed<TypingTarget>>,
-    mut text_query: Query<&mut Text>,
+    mut writer: TextUiWriter,
 ) {
     for (entity, target) in query.iter() {
-        if let Ok(mut text) = text_query.get_mut(entity) {
-            let parts = target.word.split_at(target.index);
+        let parts = target.word.split_at(target.index);
 
-            text.sections[0].value = parts.0.to_uppercase();
-            text.sections[1].value = parts.1.to_uppercase();
-        }
+        *writer.text(entity, 0) = parts.0.to_uppercase();
+        *writer.text(entity, 1) = parts.1.to_uppercase();
     }
 }
 
