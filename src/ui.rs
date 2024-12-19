@@ -77,7 +77,7 @@ fn start_screen(
                 padding: UiRect::all(Val::Px(10.0)),
                 ..default()
             },
-            BackgroundColor(Color::BLACK.into()),
+            BackgroundColor(Color::BLACK),
         ))
         .id();
 
@@ -199,7 +199,7 @@ fn end_screen(
                 padding: UiRect::all(Val::Px(10.0)),
                 ..default()
             },
-            BackgroundColor(Color::BLACK.into()),
+            BackgroundColor(Color::BLACK),
         ))
         .id();
 
@@ -287,7 +287,7 @@ fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: R
                 },
                 ..default()
             },
-            BackgroundColor(Color::BLACK.into()),
+            BackgroundColor(Color::BLACK),
         ))
         .id();
 
@@ -337,7 +337,7 @@ fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: R
                 },
                 ..default()
             },
-            BackgroundColor(Color::BLACK.into()),
+            BackgroundColor(Color::BLACK),
         ))
         .id();
 
