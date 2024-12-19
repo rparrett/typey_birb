@@ -92,7 +92,7 @@ fn spawn_ground(
             mesh: mesh.0.clone(),
             transform: Transform::from_xyz(max_x + GROUND_LENGTH, 0.1, 0.),
             material: material.0.clone(),
-            ..Default::default()
+            ..default()
         },
         Ground,
         Name::new("Ground"),

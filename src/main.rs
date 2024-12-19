@@ -128,7 +128,7 @@ fn main() {
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Typey Birb".into(),
-                    ..Default::default()
+                    ..default()
                 }),
                 ..default()
             })
@@ -544,7 +544,7 @@ fn spawn_obstacle(
                     transform: Transform::from_xyz(0., bottom_y, 0.),
                     mesh: bottom_cylinder,
                     material: materials.add(Color::from(LIME)),
-                    ..Default::default()
+                    ..default()
                 },
                 ObstacleCollider,
             ));
@@ -553,7 +553,7 @@ fn spawn_obstacle(
                     transform: Transform::from_xyz(0., bottom_flange_y, 0.),
                     mesh: flange.clone(),
                     material: materials.add(Color::from(LIME)),
-                    ..Default::default()
+                    ..default()
                 },
                 ObstacleCollider,
             ));
@@ -563,7 +563,7 @@ fn spawn_obstacle(
                     transform: Transform::from_xyz(0., top_y, 0.),
                     mesh: top_cylinder,
                     material: materials.add(Color::from(LIME)),
-                    ..Default::default()
+                    ..default()
                 },
                 ObstacleCollider,
             ));
@@ -572,7 +572,7 @@ fn spawn_obstacle(
                     transform: Transform::from_xyz(0., top_flange_y, 0.),
                     mesh: flange.clone(),
                     material: materials.add(Color::from(LIME)),
-                    ..Default::default()
+                    ..default()
                 },
                 ObstacleCollider,
             ));
@@ -750,7 +750,7 @@ fn setup(mut commands: Commands) {
     // camera
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(4.5, 5.8, 11.7).with_rotation(Quat::from_rotation_x(-0.211)),
-        ..Default::default()
+        ..default()
     });
 
     // directional 'sun' light
@@ -758,7 +758,7 @@ fn setup(mut commands: Commands) {
         directional_light: DirectionalLight {
             shadows_enabled: true,
             illuminance: 1000.,
-            ..Default::default()
+            ..default()
         },
         cascade_shadow_config: CascadeShadowConfigBuilder {
             maximum_distance: 40.,
@@ -769,8 +769,8 @@ fn setup(mut commands: Commands) {
         transform: Transform {
             rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4 / 2.)
                 * Quat::from_rotation_y(std::f32::consts::PI / 8.),
-            ..Default::default()
+            ..default()
         },
-        ..Default::default()
+        ..default()
     });
 }
