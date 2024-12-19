@@ -16,6 +16,8 @@ struct RivalPortrait;
 #[derive(Component)]
 struct Decorated;
 
+pub const FONT_SIZE: f32 = 33.0;
+
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, update_targets);
@@ -90,7 +92,7 @@ fn start_screen(
             )),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(Color::WHITE),
@@ -102,7 +104,7 @@ fn start_screen(
             Text::default(),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(LIME.into()),
@@ -112,7 +114,7 @@ fn start_screen(
             TextSpan::new("START"),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(Color::srgb_u8(255, 235, 146)),
@@ -208,7 +210,7 @@ fn end_screen(
             Text::new(death_msg),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(Color::WHITE),
@@ -220,7 +222,7 @@ fn end_screen(
             Text::default(),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(LIME.into()),
@@ -230,7 +232,7 @@ fn end_screen(
             TextSpan::new("RETRY"),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(Color::srgb_u8(255, 235, 146)),
@@ -303,7 +305,7 @@ fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: R
             Text::default(),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(LIME.into()),
@@ -317,7 +319,7 @@ fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: R
             TextSpan::new(top_word),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(Color::srgb_u8(255, 235, 146)),
@@ -347,7 +349,7 @@ fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: R
             Text::default(),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(LIME.into()),
@@ -364,7 +366,7 @@ fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: R
             TextSpan::new(bottom_word),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(Color::srgb_u8(255, 235, 146)),
@@ -376,7 +378,7 @@ fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: R
             Text::new("SCORE "),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(Color::srgba(0.8, 0.8, 0.8, 1.0)),
@@ -392,7 +394,7 @@ fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: R
             TextSpan::new("0"),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 33.,
+                font_size: FONT_SIZE,
                 ..default()
             },
             TextColor(Color::WHITE),
