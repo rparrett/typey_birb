@@ -8,6 +8,9 @@ PORT=4000
 [env.release]
 CARGO_RELEASE_ARGS = "--release"
 
+[env.web-dist]
+CARGO_RELEASE_ARGS = "--profile web-dist"
+
 [tasks.show-env]
 command = "env"
 
