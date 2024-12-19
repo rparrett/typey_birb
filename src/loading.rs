@@ -78,7 +78,7 @@ fn loading(mut commands: Commands) {
     commands.spawn((
         Text::new("Loading..."),
         TextFont {
-            font_size: 20.,
+            font_size: 16.,
             ..default()
         },
         Node {

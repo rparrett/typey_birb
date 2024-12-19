@@ -97,7 +97,7 @@ fn start_screen(
             )),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(Color::WHITE),
@@ -109,7 +109,7 @@ fn start_screen(
             Text::default(),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(LIME.into()),
@@ -119,7 +119,7 @@ fn start_screen(
             TextSpan::new("START"),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(Color::srgb_u8(255, 235, 146)),
@@ -213,7 +213,7 @@ fn end_sceen(
             Text::new(death_msg),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(Color::WHITE),
@@ -225,7 +225,7 @@ fn end_sceen(
             Text::default(),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(LIME.into()),
@@ -235,7 +235,7 @@ fn end_sceen(
             TextSpan::new("RETRY"),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(Color::srgb_u8(255, 235, 146)),
@@ -246,7 +246,7 @@ fn end_sceen(
     commands.entity(bg).add_children(&[deadtext, retrytext]);
 }
 
-fn update_score(mut query: Query<&mut Text, With<ScoreText>>, score: Res<Score>) {
+fn update_score(mut query: Query<&mut TextSpan, With<ScoreText>>, score: Res<Score>) {
     if !score.is_changed() {
         return;
     }
@@ -307,7 +307,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
             Text::default(),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(LIME.into()),
@@ -321,7 +321,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
             TextSpan::new(topword),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(Color::srgb_u8(255, 235, 146)),
@@ -351,7 +351,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
             Text::default(),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(LIME.into()),
@@ -368,7 +368,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
             TextSpan::new(bottomword),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(Color::srgb_u8(255, 235, 146)),
@@ -380,7 +380,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
             Text::new("SCORE "),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(Color::srgba(0.8, 0.8, 0.8, 1.0)),
@@ -391,16 +391,16 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                 padding: UiRect::all(Val::Px(5.0)),
                 ..default()
             },
-            ScoreText,
         ))
         .with_child((
             TextSpan::new("0"),
             TextFont {
                 font: font_assets.main.clone(),
-                font_size: 40.,
+                font_size: 33.,
                 ..default()
             },
             TextColor(Color::WHITE),
+            ScoreText,
         ))
         .id();
 
