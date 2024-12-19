@@ -11,10 +11,10 @@ license = "MIT OR Apache-2.0"
 inspector = ["bevy-inspector-egui"]
 
 [dependencies]
-bevy = { version = "0.14", features = ["jpeg"] }
-bevy-inspector-egui = { version = "0.25", optional = true }
-bevy_asset_loader = "0.21"
-bevy_pipelines_ready = "0.4"
+bevy = { version = "0.15", features = ["jpeg"] }
+bevy-inspector-egui = { version = "0.28", optional = true }
+bevy_asset_loader = "0.22"
+bevy_pipelines_ready = "0.5"
 
 rand = "0.8"
 
