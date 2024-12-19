@@ -59,7 +59,7 @@ fn ground_movement(
     time: Res<Time>,
     speed: Res<Speed>,
 ) {
-    let delta = time.delta_seconds() * speed.current;
+    let delta = time.delta_secs() * speed.current;
 
     for (entity, mut transform) in query.iter_mut() {
         transform.translation.x -= delta;
@@ -88,12 +88,9 @@ fn spawn_ground(
         .unwrap_or(-GROUND_LENGTH);
 
     commands.spawn((
-        PbrBundle {
-            mesh: mesh.0.clone(),
-            transform: Transform::from_xyz(max_x + GROUND_LENGTH, 0.1, 0.),
-            material: material.0.clone(),
-            ..default()
-        },
+        Mesh3d(mesh.0.clone()),
+        MeshMaterial3d(material.0.clone()),
+        Transform::from_xyz(max_x + GROUND_LENGTH, 0.1, 0.),
         Ground,
         Name::new("Ground"),
     ));
