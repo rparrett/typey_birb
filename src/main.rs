@@ -128,7 +128,7 @@ fn main() {
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Typey Birb".into(),
-                    ..Default::default()
+                    ..default()
                 }),
                 ..default()
             })
@@ -142,6 +142,7 @@ fn main() {
     );
 
     app.init_state::<AppState>();
+    app.enable_state_scoped_entities::<AppState>();
 
     app.add_plugins(LoadingPlugin);
 
@@ -247,13 +248,13 @@ fn rival_movement(mut query: Query<&mut Transform, With<Rival>>, time: Res<Time>
 
     for mut transform in query.iter_mut() {
         if transform.translation.x < 3. {
-            transform.translation.x += speed * time.delta_seconds();
+            transform.translation.x += speed * time.delta_secs();
         }
 
-        let floaty = time.elapsed_seconds().sin();
+        let floaty = time.elapsed_secs().sin();
         transform.translation.y = 4. + floaty;
 
-        transform.rotation = Quat::from_rotation_z(time.elapsed_seconds().cos() / 4.)
+        transform.rotation = Quat::from_rotation_z(time.elapsed_secs().cos() / 4.)
     }
 }
 
@@ -278,7 +279,7 @@ fn rival_movement_end_screen(
             .unwrap();
 
         *maybe_orbit = Some(Orbit {
-            angle: closest_obstacle.1.angle_between(rival.translation.xz()),
+            angle: closest_obstacle.1.angle_to(rival.translation.xz()),
             origin: closest_obstacle.1,
             distance: closest_obstacle.0.sqrt(),
         })
@@ -287,7 +288,7 @@ fn rival_movement_end_screen(
 
     // Convert speed to angular speed.
     let speed = 5. / std::f32::consts::TAU / orbit.distance * 2.;
-    let step = speed * time.delta_seconds();
+    let step = speed * time.delta_secs();
 
     for mut transform in query.iter_mut() {
         orbit.angle += step;
@@ -311,21 +312,18 @@ fn rival_movement_end_screen(
             EulerRot::XYZ,
             0.,
             next_y_rot,
-            time.elapsed_seconds().cos() / 4.,
+            time.elapsed_secs().cos() / 4.,
         );
 
-        let floaty = time.elapsed_seconds().sin();
+        let floaty = time.elapsed_secs().sin();
         transform.translation.y = 4. + floaty;
     }
 }
 
 fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     commands.spawn((
-        SceneBundle {
-            scene: gltf_assets.birb_gold.clone(),
-            transform: Transform::from_xyz(-10., 4., 2.5).with_scale(Vec3::splat(0.25)),
-            ..default()
-        },
+        SceneRoot(gltf_assets.birb_gold.clone()),
+        Transform::from_xyz(-10., 4., 2.5).with_scale(Vec3::splat(0.25)),
         CurrentRotationZ(0.),
         Rival,
         Name::new("Rival"),
@@ -339,10 +337,10 @@ fn bad_flap_sound(
 ) {
     for e in events.read() {
         if let Action::BadFlap = e {
-            commands.spawn(AudioBundle {
-                source: audio_assets.badflap.clone(),
-                settings: PlaybackSettings::DESPAWN,
-            });
+            commands.spawn((
+                AudioPlayer(audio_assets.badflap.clone()),
+                PlaybackSettings::DESPAWN,
+            ));
         }
     }
 }
@@ -358,10 +356,8 @@ fn game_music(
     }
 
     commands.spawn((
-        AudioBundle {
-            source: audio_assets.game.clone(),
-            settings: PlaybackSettings::LOOP,
-        },
+        AudioPlayer(audio_assets.game.clone()),
+        PlaybackSettings::LOOP,
         MusicController,
     ));
 }
@@ -377,10 +373,8 @@ fn start_screen_music(
     }
 
     commands.spawn((
-        AudioBundle {
-            source: audio_assets.menu.clone(),
-            settings: PlaybackSettings::LOOP,
-        },
+        AudioPlayer(audio_assets.menu.clone()),
+        PlaybackSettings::LOOP,
         MusicController,
     ));
 }
@@ -403,11 +397,8 @@ fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     };
 
     commands.spawn((
-        SceneBundle {
-            scene: gltf_assets.birb.clone(),
-            transform: Transform::from_translation(pos).with_scale(Vec3::splat(0.25)),
-            ..default()
-        },
+        SceneRoot(gltf_assets.birb.clone()),
+        Transform::from_translation(pos).with_scale(Vec3::splat(0.25)),
         TargetPosition(pos),
         CurrentRotationZ(0.),
         aabb,
@@ -440,28 +431,31 @@ fn collision(
             commands.entity(entity).insert(Used);
             score.0 += 2;
 
-            commands.spawn(AudioBundle {
-                source: audio_assets.score.clone(),
-                settings: PlaybackSettings::DESPAWN,
-            });
+            commands.spawn((
+                AudioPlayer(audio_assets.score.clone()),
+                PlaybackSettings::DESPAWN,
+            ));
         }
     }
+
+    let mut hit_obstacle = false;
     for (obstacle_aabb, transform) in obstacle_collider_query.iter() {
         let mut obstacle_aabb = *obstacle_aabb;
         obstacle_aabb.center += Vec3A::from(transform.translation());
 
         if collide_aabb(&obstacle_aabb, &birb_aabb) {
-            next_state.set(AppState::EndScreen);
-
-            commands.spawn(AudioBundle {
-                source: audio_assets.crash.clone(),
-                settings: PlaybackSettings::DESPAWN,
-            });
-
-            // it's possible to collide with the pipe and flange simultaneously
-            // so we should only react to one game-ending collision.
+            hit_obstacle = true;
             break;
         }
+    }
+
+    if hit_obstacle {
+        next_state.set(AppState::EndScreen);
+
+        commands.spawn((
+            AudioPlayer(audio_assets.crash.clone()),
+            PlaybackSettings::DESPAWN,
+        ));
     }
 }
 
@@ -486,6 +480,8 @@ fn spawn_obstacle(
 
     let flange_height = 0.4;
     let flange_radius = 0.8;
+    const CYLINDER_RESOLUTION: u32 = 16;
+    const CYLINDER_SEGMENTS: u32 = 1;
 
     let bottom_height = gap_start;
     let bottom_cylinder = meshes.add(
@@ -494,8 +490,8 @@ fn spawn_obstacle(
             half_height: bottom_height / 2.,
         }
         .mesh()
-        .resolution(16)
-        .segments(1)
+        .resolution(CYLINDER_RESOLUTION)
+        .segments(CYLINDER_SEGMENTS)
         .build(),
     );
     let bottom_y = bottom_height / 2.;
@@ -507,8 +503,8 @@ fn spawn_obstacle(
             half_height: top_height / 2.,
         }
         .mesh()
-        .resolution(16)
-        .segments(1)
+        .resolution(CYLINDER_RESOLUTION)
+        .segments(CYLINDER_SEGMENTS)
         .build(),
     );
     let top_y = gap_start + GAP_SIZE + top_height / 2.;
@@ -519,8 +515,8 @@ fn spawn_obstacle(
             half_height: flange_height / 2.,
         }
         .mesh()
-        .resolution(16)
-        .segments(1)
+        .resolution(CYLINDER_RESOLUTION)
+        .segments(CYLINDER_SEGMENTS)
         .build(),
     );
     let bottom_flange_y = gap_start - flange_height / 2.;
@@ -531,59 +527,42 @@ fn spawn_obstacle(
 
     commands
         .spawn((
-            SpatialBundle {
-                transform: Transform::from_xyz(38., 0., 0.),
-                ..default()
-            },
+            Transform::from_xyz(38., 0., 0.),
+            Visibility::default(),
             Obstacle,
             Name::new("Obstacle"),
         ))
         .with_children(|parent| {
             parent.spawn((
-                PbrBundle {
-                    transform: Transform::from_xyz(0., bottom_y, 0.),
-                    mesh: bottom_cylinder,
-                    material: materials.add(Color::from(LIME)),
-                    ..Default::default()
-                },
+                Mesh3d(bottom_cylinder),
+                MeshMaterial3d(materials.add(Color::from(LIME))),
+                Transform::from_xyz(0., bottom_y, 0.),
                 ObstacleCollider,
             ));
             parent.spawn((
-                PbrBundle {
-                    transform: Transform::from_xyz(0., bottom_flange_y, 0.),
-                    mesh: flange.clone(),
-                    material: materials.add(Color::from(LIME)),
-                    ..Default::default()
-                },
+                Mesh3d(flange.clone()),
+                MeshMaterial3d(materials.add(Color::from(LIME))),
+                Transform::from_xyz(0., bottom_flange_y, 0.),
                 ObstacleCollider,
             ));
 
             parent.spawn((
-                PbrBundle {
-                    transform: Transform::from_xyz(0., top_y, 0.),
-                    mesh: top_cylinder,
-                    material: materials.add(Color::from(LIME)),
-                    ..Default::default()
-                },
+                Mesh3d(top_cylinder),
+                MeshMaterial3d(materials.add(Color::from(LIME))),
+                Transform::from_xyz(0., top_y, 0.),
                 ObstacleCollider,
             ));
             parent.spawn((
-                PbrBundle {
-                    transform: Transform::from_xyz(0., top_flange_y, 0.),
-                    mesh: flange.clone(),
-                    material: materials.add(Color::from(LIME)),
-                    ..Default::default()
-                },
+                Mesh3d(flange.clone()),
+                MeshMaterial3d(materials.add(Color::from(LIME))),
+                Transform::from_xyz(0., top_flange_y, 0.),
                 ObstacleCollider,
             ));
             parent.spawn((
-                PbrBundle {
-                    transform: Transform::from_xyz(0., middle_y, 0.),
-                    mesh: middle.clone(),
-                    visibility: Visibility::Hidden,
-                    material: materials.add(Color::from(DEEP_PINK.with_alpha(0.5))),
-                    ..default()
-                },
+                Mesh3d(middle.clone()),
+                MeshMaterial3d(materials.add(Color::from(DEEP_PINK.with_alpha(0.5)))),
+                Transform::from_xyz(0., middle_y, 0.),
+                Visibility::Hidden,
                 ScoreCollider,
                 Name::new("ScoreCollider"),
             ));
@@ -597,7 +576,7 @@ fn obstacle_movement(
     mut distance: ResMut<DistanceToSpawn>,
     speed: Res<Speed>,
 ) {
-    let delta = time.delta_seconds() * speed.current;
+    let delta = time.delta_secs() * speed.current;
 
     distance.0 -= delta;
 
@@ -614,8 +593,8 @@ fn start_screen_movement(mut query: Query<(&mut Transform, &mut TargetPosition)>
     let magnitude = 0.15;
 
     for (mut transform, mut target) in query.iter_mut() {
-        let floaty = (time.elapsed_seconds() * speed).sin() * magnitude;
-        transform.translation.y = 3. + floaty;
+        let float_y = (time.elapsed_secs() * speed).sin() * magnitude;
+        transform.translation.y = 3. + float_y;
         target.0 = transform.translation;
     }
 }
@@ -637,7 +616,7 @@ fn movement(
                 continue;
             }
 
-            let delta = time.delta_seconds() * rot_speed_glide;
+            let delta = time.delta_secs() * rot_speed_glide;
 
             if rotation.0 < 0. {
                 rotation.0 = (rotation.0 + delta).min(0.);
@@ -655,16 +634,16 @@ fn movement(
         let dir = target.0 - transform.translation;
 
         let rot = if dir.y > 0. {
-            time.delta_seconds() * rot_speed
+            time.delta_secs() * rot_speed
         } else {
-            time.delta_seconds() * -rot_speed
+            time.delta_secs() * -rot_speed
         };
         rotation.0 = (rotation.0 + rot).clamp(-0.5, 0.5);
         transform.rotation = Quat::from_rotation_z(rotation.0);
 
         // seek the target position
 
-        let delta = dir.normalize() * time.delta_seconds() * speed;
+        let delta = dir.normalize() * time.delta_secs() * speed;
         if dist < delta.length() {
             transform.translation = target.0;
         } else {
@@ -711,15 +690,15 @@ fn update_target_position(
                     if target.0.y > BIRB_MAX_Y {
                         target.0.y = BIRB_MAX_Y;
 
-                        commands.spawn(AudioBundle {
-                            source: audio_assets.bump.clone(),
-                            settings: PlaybackSettings::DESPAWN,
-                        });
+                        commands.spawn((
+                            AudioPlayer(audio_assets.bump.clone()),
+                            PlaybackSettings::DESPAWN,
+                        ));
                     } else {
-                        commands.spawn(AudioBundle {
-                            source: audio_assets.flap.clone(),
-                            settings: PlaybackSettings::DESPAWN,
-                        });
+                        commands.spawn((
+                            AudioPlayer(audio_assets.flap.clone()),
+                            PlaybackSettings::DESPAWN,
+                        ));
                     }
                 }
             }
@@ -729,15 +708,15 @@ fn update_target_position(
                     if target.0.y < BIRB_MIN_Y {
                         target.0.y = BIRB_MIN_Y;
 
-                        commands.spawn(AudioBundle {
-                            source: audio_assets.bump.clone(),
-                            settings: PlaybackSettings::DESPAWN,
-                        });
+                        commands.spawn((
+                            AudioPlayer(audio_assets.bump.clone()),
+                            PlaybackSettings::DESPAWN,
+                        ));
                     } else {
-                        commands.spawn(AudioBundle {
-                            source: audio_assets.flap.clone(),
-                            settings: PlaybackSettings::DESPAWN,
-                        });
+                        commands.spawn((
+                            AudioPlayer(audio_assets.flap.clone()),
+                            PlaybackSettings::DESPAWN,
+                        ));
                     }
                 }
             }
@@ -748,29 +727,28 @@ fn update_target_position(
 
 fn setup(mut commands: Commands) {
     // camera
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(4.5, 5.8, 11.7).with_rotation(Quat::from_rotation_x(-0.211)),
-        ..Default::default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(4.5, 5.8, 11.7).with_rotation(Quat::from_rotation_x(-0.211)),
+    ));
 
     // directional 'sun' light
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn((
+        DirectionalLight {
             shadows_enabled: true,
             illuminance: 1000.,
-            ..Default::default()
+            ..default()
         },
-        cascade_shadow_config: CascadeShadowConfigBuilder {
+        CascadeShadowConfigBuilder {
             maximum_distance: 40.,
             ..default()
         }
-        .into(),
+        .build(),
         // Rotate such that upcoming gaps can be spied from the shadows
-        transform: Transform {
+        Transform {
             rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4 / 2.)
                 * Quat::from_rotation_y(std::f32::consts::PI / 8.),
-            ..Default::default()
+            ..default()
         },
-        ..Default::default()
-    });
+    ));
 }

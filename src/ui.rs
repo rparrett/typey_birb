@@ -1,6 +1,5 @@
 use crate::{
     typing::{TypingTarget, WordList},
-    util::cleanup,
     Action, AppState, FontAssets, GltfAssets, Score,
 };
 use bevy::{
@@ -13,13 +12,11 @@ pub struct UiPlugin;
 #[derive(Component)]
 struct ScoreText;
 #[derive(Component)]
-struct StartScreenOnly;
-#[derive(Component)]
-struct EndScreenOnly;
-#[derive(Component)]
 struct RivalPortrait;
 #[derive(Component)]
 struct Decorated;
+
+pub const FONT_SIZE: f32 = 33.0;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
@@ -31,10 +28,8 @@ impl Plugin for UiPlugin {
         app.add_systems(OnExit(AppState::LoadingAssets), setup);
 
         app.add_systems(OnEnter(AppState::StartScreen), start_screen);
-        app.add_systems(OnExit(AppState::StartScreen), cleanup::<StartScreenOnly>);
 
-        app.add_systems(OnEnter(AppState::EndScreen), end_sceen);
-        app.add_systems(OnExit(AppState::EndScreen), cleanup::<EndScreenOnly>);
+        app.add_systems(OnEnter(AppState::EndScreen), end_screen);
     }
 }
 
@@ -46,435 +41,379 @@ fn start_screen(
     // rival
 
     commands.spawn((
-        SceneBundle {
-            scene: gltf_assets.birb_gold.clone(),
-            transform: Transform::from_xyz(8.4, 4.0, -0.2)
-                .with_scale(Vec3::splat(2.5))
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
-            ..default()
-        },
+        SceneRoot(gltf_assets.birb_gold.clone()),
+        Transform::from_xyz(8.4, 4.0, -0.2)
+            .with_scale(Vec3::splat(2.5))
+            .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
         RivalPortrait,
-        StartScreenOnly,
+        StateScoped(AppState::StartScreen),
     ));
 
     // text
 
     let container = commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    bottom: Val::Px(0.),
-                    right: Val::Px(0.),
-                    width: Val::Percent(50.0),
-                    height: Val::Percent(70.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..Default::default()
-                },
-                ..Default::default()
+            Node {
+                position_type: PositionType::Absolute,
+                bottom: Val::Px(0.),
+                right: Val::Px(0.),
+                width: Val::Percent(50.0),
+                height: Val::Percent(70.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::Column,
+                ..default()
             },
-            StartScreenOnly,
+            StateScoped(AppState::StartScreen),
         ))
         .id();
 
     let bg = commands
-        .spawn(NodeBundle {
-            style: Style {
+        .spawn((
+            Node {
                 width: Val::Percent(70.0),
                 height: Val::Percent(40.0),
                 align_items: AlignItems::FlexStart,
                 justify_content: JustifyContent::SpaceBetween,
                 flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(10.0)),
-                ..Default::default()
+                ..default()
             },
-            background_color: Color::BLACK.into(),
-            ..Default::default()
-        })
-        .id();
-
-    let starttext = commands
-        .spawn(TextBundle {
-            style: Style {
-                ..Default::default()
-            },
-            text: Text {
-                sections: vec![TextSection {
-                    value: "So you want to join the flock, eh?\nYou'll have to beat me first!\nType the word below when you're ready."
-                        .into(),
-                    style: TextStyle {
-                        font: font_assets.main.clone(),
-                        font_size: 40.,
-                        color: Color::WHITE,
-                    },
-                }],
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .id();
-
-    let starttarget = commands
-        .spawn((
-            TextBundle {
-                style: Style {
-                    ..Default::default()
-                },
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: "".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: LIME.into(),
-                            },
-                        },
-                        TextSection {
-                            value: "START".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: Color::srgb_u8(255, 235, 146),
-                            },
-                        },
-                    ],
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            TypingTarget::new_whole("start".into(), vec![Action::Start]),
+            BackgroundColor(Color::BLACK),
         ))
         .id();
 
-    commands.entity(container).push_children(&[bg]);
-    commands.entity(bg).push_children(&[starttext, starttarget]);
+    let start_text = commands
+        .spawn((
+            Text::new(concat!(
+                "So you want to join the flock, eh?\n",
+                "You'll have to beat me first!\n",
+                "Type the word below when you're ready."
+            )),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(Color::WHITE),
+        ))
+        .id();
+
+    let start_target = commands
+        .spawn((
+            Text::default(),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(LIME.into()),
+            TypingTarget::new_whole("start".into(), vec![Action::Start]),
+        ))
+        .with_child((
+            TextSpan::new("START"),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(Color::srgb_u8(255, 235, 146)),
+        ))
+        .id();
+
+    commands.entity(container).add_children(&[bg]);
+    commands
+        .entity(bg)
+        .add_children(&[start_text, start_target]);
 }
 
-fn end_sceen(
+fn end_screen(
     mut commands: Commands,
     gltf_assets: Res<GltfAssets>,
     font_assets: Res<FontAssets>,
     score: Res<Score>,
 ) {
     let death_msg = if score.0 > 1000 {
-        "I... wha... wow!\nWhat am I even doing with my life?\nThe flock is yours, if you'll have us!"
+        concat!(
+            "I... wha... wow!\n,
+            What am I even doing with my life?\n",
+            "The flock is yours, if you'll have us!"
+        )
     } else if score.0 > 400 {
-        "That was a close one!\nWith moves like that, you'll\nfit in well here!"
+        concat!(
+            "That was a close one!\n",
+            "With moves like that, you'll\n",
+            "fit in well here!"
+        )
     } else if score.0 > 200 {
-        "Not bad, kid!\nThere may be room for you in the flock\nas an unpaid apprentice."
+        concat!(
+            "Not bad, kid!\n",
+            "There may be room for you in the flock\n",
+            "as an unpaid apprentice."
+        )
     } else {
-        "Oh wow, ouch!\nIt's a shame you can't move side to side,\nthe path is a bit clearer over here!"
+        concat!(
+            "Oh wow, ouch!\n",
+            "It's a shame you can't move side to side,\n",
+            "the path is a bit clearer over here!"
+        )
     };
 
     // rival
 
     commands.spawn((
-        SceneBundle {
-            scene: gltf_assets.birb_gold.clone(),
-            transform: Transform::from_xyz(8.4, 4.0, -0.2)
-                .with_scale(Vec3::splat(2.5))
-                .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
-            ..default()
-        },
+        SceneRoot(gltf_assets.birb_gold.clone()),
+        Transform::from_xyz(8.4, 4.0, -0.2)
+            .with_scale(Vec3::splat(2.5))
+            .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
         RivalPortrait,
         Name::new("RivalPortrait"),
-        EndScreenOnly,
+        StateScoped(AppState::EndScreen),
     ));
 
     // text
 
     let container = commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    bottom: Val::Px(0.),
-                    right: Val::Px(0.),
-                    width: Val::Percent(50.0),
-                    height: Val::Percent(70.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column,
-                    ..Default::default()
-                },
-                ..Default::default()
+            Node {
+                position_type: PositionType::Absolute,
+                bottom: Val::Px(0.),
+                right: Val::Px(0.),
+                width: Val::Percent(50.0),
+                height: Val::Percent(70.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::Column,
+                ..default()
             },
-            EndScreenOnly,
+            StateScoped(AppState::EndScreen),
         ))
         .id();
 
     let bg = commands
-        .spawn(NodeBundle {
-            style: Style {
+        .spawn((
+            Node {
                 width: Val::Percent(70.0),
                 height: Val::Percent(40.0),
                 align_items: AlignItems::FlexStart,
                 justify_content: JustifyContent::SpaceBetween,
                 flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(10.0)),
-                ..Default::default()
+                ..default()
             },
-            background_color: Color::BLACK.into(),
-            ..Default::default()
-        })
-        .id();
-
-    let deadtext = commands
-        .spawn(TextBundle {
-            style: Style {
-                ..Default::default()
-            },
-            text: Text {
-                sections: vec![TextSection {
-                    value: death_msg.into(),
-                    style: TextStyle {
-                        font: font_assets.main.clone(),
-                        font_size: 40.,
-                        color: Color::WHITE,
-                    },
-                }],
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .id();
-
-    let retrytext = commands
-        .spawn((
-            TextBundle {
-                style: Style {
-                    ..Default::default()
-                },
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: "".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: LIME.into(),
-                            },
-                        },
-                        TextSection {
-                            value: "RETRY".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: Color::srgb_u8(255, 235, 146),
-                            },
-                        },
-                    ],
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            TypingTarget::new_whole("retry".into(), vec![Action::Retry]),
+            BackgroundColor(Color::BLACK),
         ))
         .id();
 
-    commands.entity(container).push_children(&[bg]);
-    commands.entity(bg).push_children(&[deadtext, retrytext]);
+    let dead_text = commands
+        .spawn((
+            Text::new(death_msg),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(Color::WHITE),
+        ))
+        .id();
+
+    let retry_text = commands
+        .spawn((
+            Text::default(),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(LIME.into()),
+            TypingTarget::new_whole("retry".into(), vec![Action::Retry]),
+        ))
+        .with_child((
+            TextSpan::new("RETRY"),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(Color::srgb_u8(255, 235, 146)),
+        ))
+        .id();
+
+    commands.entity(container).add_children(&[bg]);
+    commands.entity(bg).add_children(&[dead_text, retry_text]);
 }
 
-fn update_score(mut query: Query<&mut Text, With<ScoreText>>, score: Res<Score>) {
+fn update_score(mut query: Query<&mut TextSpan, With<ScoreText>>, score: Res<Score>) {
     if !score.is_changed() {
         return;
     }
     for mut text in query.iter_mut() {
-        text.sections[1].value = format!("{}", score.0);
+        text.0 = format!("{}", score.0);
     }
 }
 
 fn update_targets(
     query: Query<(Entity, &TypingTarget), Changed<TypingTarget>>,
-    mut text_query: Query<&mut Text>,
+    mut writer: TextUiWriter,
 ) {
     for (entity, target) in query.iter() {
-        if let Ok(mut text) = text_query.get_mut(entity) {
-            let parts = target.word.split_at(target.index);
+        let parts = target.word.split_at(target.index);
 
-            text.sections[0].value = parts.0.to_uppercase();
-            text.sections[1].value = parts.1.to_uppercase();
-        }
+        *writer.text(entity, 0) = parts.0.to_uppercase();
+        *writer.text(entity, 1) = parts.1.to_uppercase();
     }
 }
 
-fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Res<FontAssets>) {
+fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: Res<FontAssets>) {
     // root node
     let root = commands
-        .spawn(NodeBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                justify_content: JustifyContent::SpaceBetween,
-                flex_direction: FlexDirection::Column,
-                ..Default::default()
-            },
-            ..Default::default()
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::SpaceBetween,
+            flex_direction: FlexDirection::Column,
+            ..default()
         })
         .id();
 
-    let topbar = commands
-        .spawn(NodeBundle {
-            style: Style {
+    let top_bar = commands
+        .spawn((
+            Node {
                 width: Val::Percent(100.0),
                 height: Val::Px(50.),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 padding: UiRect {
                     bottom: Val::Px(5.),
-                    ..Default::default()
+                    ..default()
                 },
-                ..Default::default()
+                ..default()
             },
-            background_color: Color::BLACK.into(),
-            ..Default::default()
-        })
+            BackgroundColor(Color::BLACK),
+        ))
         .id();
 
-    let mut not: HashSet<char> = "start".chars().collect();
-    let topword = wordlist.find_next_word(&not);
-    for c in topword.chars() {
-        not.insert(c);
+    let mut used: HashSet<char> = "start".chars().collect();
+
+    let top_word = word_list.find_next_word(&used);
+    for c in top_word.chars() {
+        used.insert(c);
     }
 
-    let toptext = commands
+    let top_text = commands
         .spawn((
-            TextBundle {
-                style: Style {
-                    margin: UiRect::all(Val::Px(5.0)),
-                    ..Default::default()
-                },
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: "".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: LIME.into(),
-                            },
-                        },
-                        TextSection {
-                            value: topword.clone(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: Color::srgb_u8(255, 235, 146),
-                            },
-                        },
-                    ],
-                    ..Default::default()
-                },
-                ..Default::default()
+            Text::default(),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
             },
-            TypingTarget::new(topword, vec![Action::BirbUp, Action::IncScore(1)]),
+            TextColor(LIME.into()),
+            Node {
+                margin: UiRect::all(Val::Px(5.0)),
+                ..default()
+            },
+            TypingTarget::new(top_word.clone(), vec![Action::BirbUp, Action::IncScore(1)]),
+        ))
+        .with_child((
+            TextSpan::new(top_word),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(Color::srgb_u8(255, 235, 146)),
         ))
         .id();
 
-    let bottombar = commands
-        .spawn(NodeBundle {
-            style: Style {
+    let bottom_bar = commands
+        .spawn((
+            Node {
                 width: Val::Percent(100.0),
                 height: Val::Px(50.),
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
                 padding: UiRect {
                     bottom: Val::Px(5.),
-                    ..Default::default()
+                    ..default()
                 },
-                ..Default::default()
+                ..default()
             },
-            background_color: Color::BLACK.into(),
-            ..Default::default()
-        })
-        .id();
-
-    let bottomword = wordlist.find_next_word(&not);
-    let bottomtext = commands
-        .spawn((
-            TextBundle {
-                style: Style {
-                    margin: UiRect::all(Val::Px(5.0)),
-                    ..Default::default()
-                },
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: "".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: LIME.into(),
-                            },
-                        },
-                        TextSection {
-                            value: bottomword.clone(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: Color::srgb_u8(255, 235, 146),
-                            },
-                        },
-                    ],
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            TypingTarget::new(bottomword, vec![Action::BirbDown, Action::IncScore(1)]),
+            BackgroundColor(Color::BLACK),
         ))
         .id();
 
-    let scoretext = commands
+    let bottom_word = word_list.find_next_word(&used);
+    let bottom_text = commands
         .spawn((
-            TextBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    top: Val::Px(3.0),
-                    left: Val::Px(10.0),
-                    padding: UiRect::all(Val::Px(5.0)),
-                    ..Default::default()
-                },
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: "SCORE ".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: Color::srgba(0.8, 0.8, 0.8, 1.0),
-                            },
-                        },
-                        TextSection {
-                            value: "0".into(),
-                            style: TextStyle {
-                                font: font_assets.main.clone(),
-                                font_size: 40.,
-                                color: Color::WHITE,
-                            },
-                        },
-                    ],
-                    ..Default::default()
-                },
-                ..Default::default()
+            Text::default(),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
             },
+            TextColor(LIME.into()),
+            Node {
+                margin: UiRect::all(Val::Px(5.0)),
+                ..default()
+            },
+            TypingTarget::new(
+                bottom_word.clone(),
+                vec![Action::BirbDown, Action::IncScore(1)],
+            ),
+        ))
+        .with_child((
+            TextSpan::new(bottom_word),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(Color::srgb_u8(255, 235, 146)),
+        ))
+        .id();
+
+    let score_text = commands
+        .spawn((
+            Text::new("SCORE "),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(Color::srgba(0.8, 0.8, 0.8, 1.0)),
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(3.0),
+                left: Val::Px(10.0),
+                padding: UiRect::all(Val::Px(5.0)),
+                ..default()
+            },
+        ))
+        .with_child((
+            TextSpan::new("0"),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(Color::WHITE),
             ScoreText,
         ))
         .id();
 
-    commands.entity(root).push_children(&[topbar, bottombar]);
-    commands.entity(topbar).push_children(&[toptext, scoretext]);
-    commands.entity(bottombar).push_children(&[bottomtext]);
+    commands.entity(root).add_children(&[top_bar, bottom_bar]);
+    commands
+        .entity(top_bar)
+        .add_children(&[top_text, score_text]);
+    commands.entity(bottom_bar).add_children(&[bottom_text]);
 }
 
 fn decorate_rival_portrait(
     mut commands: Commands,
     spawner: Res<SceneSpawner>,
     undecorated: Query<(Entity, &SceneInstance), (Without<Decorated>, With<RivalPortrait>)>,
-    mesh_query: Query<(), With<Handle<Mesh>>>,
+    mesh_query: Query<(), With<Mesh3d>>,
 ) {
     for (entity, instance) in undecorated.iter() {
         if spawner.instance_is_ready(**instance) {
