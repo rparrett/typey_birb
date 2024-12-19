@@ -1,6 +1,5 @@
 use crate::{
     typing::{TypingTarget, WordList},
-    util::cleanup,
     Action, AppState, FontAssets, GltfAssets, Score,
 };
 use bevy::{
@@ -12,10 +11,6 @@ pub struct UiPlugin;
 
 #[derive(Component)]
 struct ScoreText;
-#[derive(Component)]
-struct StartScreenOnly;
-#[derive(Component)]
-struct EndScreenOnly;
 #[derive(Component)]
 struct RivalPortrait;
 #[derive(Component)]
@@ -31,10 +26,8 @@ impl Plugin for UiPlugin {
         app.add_systems(OnExit(AppState::LoadingAssets), setup);
 
         app.add_systems(OnEnter(AppState::StartScreen), start_screen);
-        app.add_systems(OnExit(AppState::StartScreen), cleanup::<StartScreenOnly>);
 
-        app.add_systems(OnEnter(AppState::EndScreen), end_sceen);
-        app.add_systems(OnExit(AppState::EndScreen), cleanup::<EndScreenOnly>);
+        app.add_systems(OnEnter(AppState::EndScreen), end_screen);
     }
 }
 
@@ -51,7 +44,7 @@ fn start_screen(
             .with_scale(Vec3::splat(2.5))
             .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
         RivalPortrait,
-        StartScreenOnly,
+        StateScoped(AppState::StartScreen),
     ));
 
     // text
@@ -69,7 +62,7 @@ fn start_screen(
                 flex_direction: FlexDirection::Column,
                 ..default()
             },
-            StartScreenOnly,
+            StateScoped(AppState::StartScreen),
         ))
         .id();
 
@@ -88,7 +81,7 @@ fn start_screen(
         ))
         .id();
 
-    let starttext = commands
+    let start_text = commands
         .spawn((
             Text::new(concat!(
                 "So you want to join the flock, eh?\n",
@@ -104,7 +97,7 @@ fn start_screen(
         ))
         .id();
 
-    let starttarget = commands
+    let start_target = commands
         .spawn((
             Text::default(),
             TextFont {
@@ -127,10 +120,12 @@ fn start_screen(
         .id();
 
     commands.entity(container).add_children(&[bg]);
-    commands.entity(bg).add_children(&[starttext, starttarget]);
+    commands
+        .entity(bg)
+        .add_children(&[start_text, start_target]);
 }
 
-fn end_sceen(
+fn end_screen(
     mut commands: Commands,
     gltf_assets: Res<GltfAssets>,
     font_assets: Res<FontAssets>,
@@ -171,7 +166,7 @@ fn end_sceen(
             .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
         RivalPortrait,
         Name::new("RivalPortrait"),
-        EndScreenOnly,
+        StateScoped(AppState::EndScreen),
     ));
 
     // text
@@ -189,7 +184,7 @@ fn end_sceen(
                 flex_direction: FlexDirection::Column,
                 ..default()
             },
-            EndScreenOnly,
+            StateScoped(AppState::EndScreen),
         ))
         .id();
 
@@ -208,7 +203,7 @@ fn end_sceen(
         ))
         .id();
 
-    let deadtext = commands
+    let dead_text = commands
         .spawn((
             Text::new(death_msg),
             TextFont {
@@ -220,7 +215,7 @@ fn end_sceen(
         ))
         .id();
 
-    let retrytext = commands
+    let retry_text = commands
         .spawn((
             Text::default(),
             TextFont {
@@ -243,7 +238,7 @@ fn end_sceen(
         .id();
 
     commands.entity(container).add_children(&[bg]);
-    commands.entity(bg).add_children(&[deadtext, retrytext]);
+    commands.entity(bg).add_children(&[dead_text, retry_text]);
 }
 
 fn update_score(mut query: Query<&mut TextSpan, With<ScoreText>>, score: Res<Score>) {
@@ -267,7 +262,7 @@ fn update_targets(
     }
 }
 
-fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Res<FontAssets>) {
+fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: Res<FontAssets>) {
     // root node
     let root = commands
         .spawn(Node {
@@ -279,7 +274,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
         })
         .id();
 
-    let topbar = commands
+    let top_bar = commands
         .spawn((
             Node {
                 width: Val::Percent(100.0),
@@ -296,13 +291,14 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
         ))
         .id();
 
-    let mut not: HashSet<char> = "start".chars().collect();
-    let topword = wordlist.find_next_word(&not);
-    for c in topword.chars() {
-        not.insert(c);
+    let mut used: HashSet<char> = "start".chars().collect();
+
+    let top_word = word_list.find_next_word(&used);
+    for c in top_word.chars() {
+        used.insert(c);
     }
 
-    let toptext = commands
+    let top_text = commands
         .spawn((
             Text::default(),
             TextFont {
@@ -315,10 +311,10 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                 margin: UiRect::all(Val::Px(5.0)),
                 ..default()
             },
-            TypingTarget::new(topword.clone(), vec![Action::BirbUp, Action::IncScore(1)]),
+            TypingTarget::new(top_word.clone(), vec![Action::BirbUp, Action::IncScore(1)]),
         ))
         .with_child((
-            TextSpan::new(topword),
+            TextSpan::new(top_word),
             TextFont {
                 font: font_assets.main.clone(),
                 font_size: 33.,
@@ -328,7 +324,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
         ))
         .id();
 
-    let bottombar = commands
+    let bottom_bar = commands
         .spawn((
             Node {
                 width: Val::Percent(100.0),
@@ -345,8 +341,8 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
         ))
         .id();
 
-    let bottomword = wordlist.find_next_word(&not);
-    let bottomtext = commands
+    let bottom_word = word_list.find_next_word(&used);
+    let bottom_text = commands
         .spawn((
             Text::default(),
             TextFont {
@@ -360,12 +356,12 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
                 ..default()
             },
             TypingTarget::new(
-                bottomword.clone(),
+                bottom_word.clone(),
                 vec![Action::BirbDown, Action::IncScore(1)],
             ),
         ))
         .with_child((
-            TextSpan::new(bottomword),
+            TextSpan::new(bottom_word),
             TextFont {
                 font: font_assets.main.clone(),
                 font_size: 33.,
@@ -375,7 +371,7 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
         ))
         .id();
 
-    let scoretext = commands
+    let score_text = commands
         .spawn((
             Text::new("SCORE "),
             TextFont {
@@ -404,9 +400,11 @@ fn setup(mut commands: Commands, mut wordlist: ResMut<WordList>, font_assets: Re
         ))
         .id();
 
-    commands.entity(root).add_children(&[topbar, bottombar]);
-    commands.entity(topbar).add_children(&[toptext, scoretext]);
-    commands.entity(bottombar).add_children(&[bottomtext]);
+    commands.entity(root).add_children(&[top_bar, bottom_bar]);
+    commands
+        .entity(top_bar)
+        .add_children(&[top_text, score_text]);
+    commands.entity(bottom_bar).add_children(&[bottom_text]);
 }
 
 fn decorate_rival_portrait(

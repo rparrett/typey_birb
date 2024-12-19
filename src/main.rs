@@ -142,6 +142,7 @@ fn main() {
     );
 
     app.init_state::<AppState>();
+    app.enable_state_scoped_entities::<AppState>();
 
     app.add_plugins(LoadingPlugin);
 
@@ -436,23 +437,25 @@ fn collision(
             ));
         }
     }
+
+    let mut hit_obstacle = false;
     for (obstacle_aabb, transform) in obstacle_collider_query.iter() {
         let mut obstacle_aabb = *obstacle_aabb;
         obstacle_aabb.center += Vec3A::from(transform.translation());
 
         if collide_aabb(&obstacle_aabb, &birb_aabb) {
-            // TODO move this outside of loop
-            next_state.set(AppState::EndScreen);
-
-            commands.spawn((
-                AudioPlayer(audio_assets.crash.clone()),
-                PlaybackSettings::DESPAWN,
-            ));
-
-            // it's possible to collide with the pipe and flange simultaneously
-            // so we should only react to one game-ending collision.
+            hit_obstacle = true;
             break;
         }
+    }
+
+    if hit_obstacle {
+        next_state.set(AppState::EndScreen);
+
+        commands.spawn((
+            AudioPlayer(audio_assets.crash.clone()),
+            PlaybackSettings::DESPAWN,
+        ));
     }
 }
 
@@ -477,6 +480,8 @@ fn spawn_obstacle(
 
     let flange_height = 0.4;
     let flange_radius = 0.8;
+    const CYLINDER_RESOLUTION: u32 = 16;
+    const CYLINDER_SEGMENTS: u32 = 1;
 
     let bottom_height = gap_start;
     let bottom_cylinder = meshes.add(
@@ -485,8 +490,8 @@ fn spawn_obstacle(
             half_height: bottom_height / 2.,
         }
         .mesh()
-        .resolution(16)
-        .segments(1)
+        .resolution(CYLINDER_RESOLUTION)
+        .segments(CYLINDER_SEGMENTS)
         .build(),
     );
     let bottom_y = bottom_height / 2.;
@@ -498,8 +503,8 @@ fn spawn_obstacle(
             half_height: top_height / 2.,
         }
         .mesh()
-        .resolution(16)
-        .segments(1)
+        .resolution(CYLINDER_RESOLUTION)
+        .segments(CYLINDER_SEGMENTS)
         .build(),
     );
     let top_y = gap_start + GAP_SIZE + top_height / 2.;
@@ -510,8 +515,8 @@ fn spawn_obstacle(
             half_height: flange_height / 2.,
         }
         .mesh()
-        .resolution(16)
-        .segments(1)
+        .resolution(CYLINDER_RESOLUTION)
+        .segments(CYLINDER_SEGMENTS)
         .build(),
     );
     let bottom_flange_y = gap_start - flange_height / 2.;
@@ -588,8 +593,8 @@ fn start_screen_movement(mut query: Query<(&mut Transform, &mut TargetPosition)>
     let magnitude = 0.15;
 
     for (mut transform, mut target) in query.iter_mut() {
-        let floaty = (time.elapsed_secs() * speed).sin() * magnitude;
-        transform.translation.y = 3. + floaty;
+        let float_y = (time.elapsed_secs() * speed).sin() * magnitude;
+        transform.translation.y = 3. + float_y;
         target.0 = transform.translation;
     }
 }
