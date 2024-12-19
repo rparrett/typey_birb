@@ -76,42 +76,31 @@ impl Plugin for LoadingPlugin {
 
 fn loading(mut commands: Commands) {
     commands.spawn((
-        TextBundle {
-            text: Text::from_section(
-                "Loading...",
-                TextStyle {
-                    font_size: 20.,
-                    ..default()
-                },
-            ),
-            style: Style {
-                position_type: PositionType::Absolute,
-                bottom: Val::Px(5.),
-                left: Val::Px(5.),
-                ..default()
-            },
-            z_index: ZIndex::Global(100),
+        Text::new("Loading..."),
+        TextFont {
+            font_size: 20.,
             ..default()
         },
+        Node {
+            position_type: PositionType::Absolute,
+            bottom: Val::Px(5.),
+            left: Val::Px(5.),
+            ..default()
+        },
+        GlobalZIndex(100),
         LoadingOnly,
     ));
 }
 
 fn preload(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     commands.spawn((
-        SceneBundle {
-            scene: gltf_assets.birb.clone(),
-            transform: Transform::from_scale(Vec3::splat(0.1)),
-            ..default()
-        },
+        SceneRoot(gltf_assets.birb.clone()),
+        Transform::from_scale(Vec3::splat(0.1)),
         LoadingOnly,
     ));
     commands.spawn((
-        SceneBundle {
-            scene: gltf_assets.birb_gold.clone(),
-            transform: Transform::from_scale(Vec3::splat(0.1)),
-            ..default()
-        },
+        SceneRoot(gltf_assets.birb_gold.clone()),
+        Transform::from_scale(Vec3::splat(0.1)),
         LoadingOnly,
     ));
 }
