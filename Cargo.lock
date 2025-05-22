@@ -1269,6 +1269,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_simple_prefs"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b999ce5844e3236342e74ba6c8b032a014f0bc76f108c1b6b8ee439c5270c4fd"
+dependencies = [
+ "bevy",
+ "bevy_simple_prefs_derive",
+ "ron",
+ "serde",
+ "web-sys",
+]
+
+[[package]]
+name = "bevy_simple_prefs_derive"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a12bf924632c35e93516f0d0198c97b8680844e1d173f036a3bf82ec09b3654"
+dependencies = [
+ "bevy",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "bevy_sprite"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5107,6 +5131,7 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_egui",
  "bevy_pipelines_ready",
+ "bevy_simple_prefs",
  "log",
  "rand",
 ]

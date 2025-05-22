@@ -11,6 +11,7 @@ use bevy::{
     pbr::CascadeShadowConfigBuilder,
     prelude::*,
 };
+use bevy_simple_prefs::{Prefs, PrefsPlugin};
 
 #[cfg(feature = "inspector")]
 use {bevy_egui::EguiPlugin, bevy_inspector_egui::quick::WorldInspectorPlugin};
@@ -104,6 +105,13 @@ impl Speed {
     }
 }
 
+#[derive(Prefs, Reflect, Default)]
+struct ExamplePrefs {
+    high_score: HighScore,
+}
+#[derive(Resource, Reflect, Clone, Default)]
+struct HighScore(u32);
+
 #[derive(Component)]
 struct Orbit {
     angle: f32,
@@ -158,6 +166,8 @@ fn main() {
         app.add_systems(Update, pause.run_if(in_state(AppState::Playing)));
     }
 
+    app.add_plugins(PrefsPlugin::<ExamplePrefs>::default());
+
     app.init_resource::<Score>()
         .init_resource::<Speed>()
         .init_resource::<DistanceToSpawn>()
@@ -211,6 +221,8 @@ fn main() {
         Update,
         rival_movement_end_screen.run_if(in_state(AppState::EndScreen)),
     );
+
+    app.add_systems(OnEnter(AppState::EndScreen), save_high_score);
 
     app.add_systems(OnExit(AppState::EndScreen), reset);
 
@@ -767,4 +779,8 @@ fn setup(mut commands: Commands) {
             ..default()
         },
     ));
+}
+
+fn save_high_score(score: Res<Score>, mut high_score: ResMut<HighScore>) {
+    high_score.0 = score.0;
 }

@@ -1,6 +1,6 @@
 use crate::{
     typing::{TypingTarget, WordList},
-    Action, AppState, FontAssets, GltfAssets, Score,
+    Action, AppState, FontAssets, GltfAssets, HighScore, Score,
 };
 use bevy::{
     color::palettes::css::LIME, pbr::NotShadowCaster, platform::collections::HashSet, prelude::*,
@@ -11,6 +11,9 @@ pub struct UiPlugin;
 
 #[derive(Component)]
 struct ScoreText;
+
+#[derive(Component)]
+struct HighScoreText;
 #[derive(Component)]
 struct RivalPortrait;
 #[derive(Component)]
@@ -20,8 +23,7 @@ pub const FONT_SIZE: f32 = 33.0;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, update_targets);
-        app.add_systems(Update, update_score);
+        app.add_systems(Update, (update_score, update_high_score, update_targets));
         // Must run after SpawnScene schedule.
         app.add_systems(PostUpdate, decorate_rival_portrait);
 
@@ -252,6 +254,15 @@ fn update_score(mut query: Query<&mut TextSpan, With<ScoreText>>, score: Res<Sco
     }
 }
 
+fn update_high_score(mut query: Query<&mut TextSpan, With<HighScoreText>>, score: Res<HighScore>) {
+    if !score.is_changed() {
+        return;
+    }
+    for mut text in query.iter_mut() {
+        text.0 = format!("{}", score.0);
+    }
+}
+
 fn update_targets(
     query: Query<(Entity, &TypingTarget), Changed<TypingTarget>>,
     mut writer: TextUiWriter,
@@ -264,7 +275,12 @@ fn update_targets(
     }
 }
 
-fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: Res<FontAssets>) {
+fn setup(
+    mut commands: Commands,
+    mut word_list: ResMut<WordList>,
+    font_assets: Res<FontAssets>,
+    maybe_high_score: Option<Res<HighScore>>,
+) {
     // root node
     let root = commands
         .spawn(Node {
@@ -402,10 +418,40 @@ fn setup(mut commands: Commands, mut word_list: ResMut<WordList>, font_assets: R
         ))
         .id();
 
+    let high_score = maybe_high_score.map(|h| h.0).unwrap_or(0);
+    let high_score_text = commands
+        .spawn((
+            Text::new("HIGH SCORE "),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(Color::srgba(0.8, 0.8, 0.8, 1.0)),
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(3.0),
+                right: Val::Px(10.0),
+                padding: UiRect::all(Val::Px(5.0)),
+                ..default()
+            },
+        ))
+        .with_child((
+            TextSpan::new(format!("{}", high_score)),
+            TextFont {
+                font: font_assets.main.clone(),
+                font_size: FONT_SIZE,
+                ..default()
+            },
+            TextColor(Color::WHITE),
+            HighScoreText,
+        ))
+        .id();
+
     commands.entity(root).add_children(&[top_bar, bottom_bar]);
     commands
         .entity(top_bar)
-        .add_children(&[top_text, score_text]);
+        .add_children(&[top_text, score_text, high_score_text]);
     commands.entity(bottom_bar).add_children(&[bottom_text]);
 }
 
