@@ -11,7 +11,7 @@ use bevy::{
 };
 
 #[cfg(feature = "inspector")]
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use {bevy_egui::EguiPlugin, bevy_inspector_egui::quick::WorldInspectorPlugin};
 
 use loading::{AudioAssets, FontAssets, GltfAssets, LoadingPlugin};
 use luck::NextGapBag;
@@ -148,7 +148,10 @@ fn main() {
 
     #[cfg(feature = "inspector")]
     {
-        app.add_plugins(WorldInspectorPlugin::new());
+        app.add_plugins(EguiPlugin {
+            enable_multipass_for_primary_context: true,
+        });
+        app.add_plugins(WorldInspectorPlugin::default());
         app.add_systems(Update, pause.run_if(in_state(AppState::Paused)));
         app.add_systems(Update, pause.run_if(in_state(AppState::Playing)));
     }
@@ -239,7 +242,7 @@ fn reset(
     commands.insert_resource(ObstacleSpacing::default());
 
     for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }
 
@@ -264,7 +267,9 @@ fn rival_movement_end_screen(
     time: Res<Time>,
     mut maybe_orbit: Local<Option<Orbit>>,
 ) {
-    let rival = query.single();
+    let Ok(rival) = query.single() else {
+        return;
+    };
 
     if maybe_orbit.is_none() {
         let closest_obstacle = obstacle_query
@@ -419,7 +424,10 @@ fn collision(
     mut next_state: ResMut<NextState<AppState>>,
     audio_assets: Res<AudioAssets>,
 ) {
-    let (birb_aabb, transform) = birb_query.single();
+    let Ok((birb_aabb, transform)) = birb_query.single() else {
+        return;
+    };
+
     let mut birb_aabb = *birb_aabb;
     birb_aabb.center += Vec3A::from(transform.translation);
 
@@ -583,7 +591,7 @@ fn obstacle_movement(
     for (entity, mut transform) in query.iter_mut() {
         transform.translation.x -= delta;
         if transform.translation.x < -30. {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }

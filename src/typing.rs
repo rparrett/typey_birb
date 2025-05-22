@@ -1,7 +1,7 @@
 use bevy::{
     input::keyboard::{Key, KeyboardInput},
+    platform::collections::HashSet,
     prelude::*,
-    utils::HashSet,
 };
 use rand::prelude::*;
 
@@ -144,14 +144,14 @@ fn keyboard(
             }
 
             for action in target.letter_actions.iter() {
-                events.send(action.clone());
+                events.write(action.clone());
             }
 
             if target.advance_char().is_none() {
-                events.send(crate::Action::NewWord(entity));
+                events.write(crate::Action::NewWord(entity));
 
                 for action in target.word_actions.iter() {
-                    events.send(action.clone());
+                    events.write(action.clone());
                 }
             }
 
@@ -159,7 +159,7 @@ fn keyboard(
         }
 
         if !ok {
-            events.send(crate::Action::BadFlap);
+            events.write(crate::Action::BadFlap);
         }
     }
 }

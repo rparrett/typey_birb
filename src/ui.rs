@@ -3,8 +3,8 @@ use crate::{
     Action, AppState, FontAssets, GltfAssets, Score,
 };
 use bevy::{
-    color::palettes::css::LIME, pbr::NotShadowCaster, prelude::*, scene::SceneInstance,
-    utils::HashSet,
+    color::palettes::css::LIME, pbr::NotShadowCaster, platform::collections::HashSet, prelude::*,
+    scene::SceneInstance,
 };
 
 pub struct UiPlugin;

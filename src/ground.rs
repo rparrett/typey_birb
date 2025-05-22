@@ -64,7 +64,7 @@ fn ground_movement(
     for (entity, mut transform) in query.iter_mut() {
         transform.translation.x -= delta;
         if transform.translation.x < -60. {
-            commands.entity(entity).despawn_recursive();
+            commands.entity(entity).despawn();
         }
     }
 }

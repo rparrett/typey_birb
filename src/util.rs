@@ -16,6 +16,6 @@ pub fn collide_aabb(a: &Aabb, b: &Aabb) -> bool {
 
 pub fn cleanup<T: Component>(mut commands: Commands, query: Query<Entity, With<T>>) {
     for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 }

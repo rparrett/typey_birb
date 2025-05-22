@@ -37,12 +37,9 @@ pub struct AudioAssets {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-const EXPECTED_PIPELINES: usize = 14;
+const EXPECTED_PIPELINES: usize = 33;
 #[cfg(target_arch = "wasm32")]
 const EXPECTED_PIPELINES: usize = 10;
-
-#[derive(Component)]
-struct LoadingOnly;
 
 pub struct LoadingPlugin;
 
@@ -70,7 +67,6 @@ impl Plugin for LoadingPlugin {
                     .run_if(resource_changed::<PipelinesReady>),
             ),
         );
-        app.add_systems(OnExit(AppState::LoadingPipelines), cleanup::<LoadingOnly>);
     }
 }
 
@@ -88,7 +84,7 @@ fn loading(mut commands: Commands) {
             ..default()
         },
         GlobalZIndex(100),
-        LoadingOnly,
+        StateScoped(AppState::LoadingPipelines),
     ));
 }
 
@@ -96,12 +92,12 @@ fn preload(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     commands.spawn((
         SceneRoot(gltf_assets.birb.clone()),
         Transform::from_scale(Vec3::splat(0.1)),
-        LoadingOnly,
+        StateScoped(AppState::LoadingPipelines),
     ));
     commands.spawn((
         SceneRoot(gltf_assets.birb_gold.clone()),
         Transform::from_scale(Vec3::splat(0.1)),
-        LoadingOnly,
+        StateScoped(AppState::LoadingPipelines),
     ));
 }
 
