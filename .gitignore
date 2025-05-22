@@ -1,5 +1,6 @@
 /target
 typey_birb_prefs.ron
+.vscode
 
 /wasm/assets
 /wasm/bevy_game.js
