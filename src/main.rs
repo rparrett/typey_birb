@@ -232,18 +232,11 @@ fn pause(
     }
 }
 
-fn reset(
-    mut commands: Commands,
-    query: Query<Entity, Or<(With<Obstacle>, With<Birb>, With<Rival>)>>,
-) {
+fn reset(mut commands: Commands) {
     commands.insert_resource(Score::default());
     commands.insert_resource(Speed::default());
     commands.insert_resource(DistanceToSpawn::default());
     commands.insert_resource(ObstacleSpacing::default());
-
-    for entity in query.iter() {
-        commands.entity(entity).despawn();
-    }
 }
 
 fn rival_movement(mut query: Query<&mut Transform, With<Rival>>, time: Res<Time>) {
@@ -332,6 +325,7 @@ fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         CurrentRotationZ(0.),
         Rival,
         Name::new("Rival"),
+        StateScoped(AppState::EndScreen),
     ));
 }
 
@@ -409,6 +403,7 @@ fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         aabb,
         Birb,
         Name::new("Birb"),
+        StateScoped(AppState::EndScreen),
     ));
 }
 
@@ -539,6 +534,7 @@ fn spawn_obstacle(
             Visibility::default(),
             Obstacle,
             Name::new("Obstacle"),
+            StateScoped(AppState::EndScreen),
         ))
         .with_children(|parent| {
             parent.spawn((

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_pipelines_ready::{PipelinesReady, PipelinesReadyPlugin};
 
-use crate::{util::cleanup, AppState};
+use crate::AppState;
 
 #[derive(AssetCollection, Resource)]
 pub struct GltfAssets {
