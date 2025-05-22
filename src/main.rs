@@ -4,10 +4,12 @@
 use bevy::{
     asset::AssetMetaCheck,
     color::palettes::css::{DEEP_PINK, LIME},
-    math::{Vec3A, Vec3Swizzles},
+    math::{
+        bounding::{Aabb3d, Bounded3d, BoundingVolume, IntersectsVolume},
+        Vec3A, Vec3Swizzles,
+    },
     pbr::CascadeShadowConfigBuilder,
     prelude::*,
-    render::primitives::Aabb,
 };
 
 #[cfg(feature = "inspector")]
@@ -15,14 +17,12 @@ use {bevy_egui::EguiPlugin, bevy_inspector_egui::quick::WorldInspectorPlugin};
 
 use loading::{AudioAssets, FontAssets, GltfAssets, LoadingPlugin};
 use luck::NextGapBag;
-use util::collide_aabb;
 
 mod ground;
 mod loading;
 mod luck;
 mod typing;
 mod ui;
-mod util;
 mod words;
 
 #[derive(Component)]
@@ -49,6 +49,8 @@ struct Rival;
 struct TargetPosition(Vec3);
 #[derive(Component)]
 struct CurrentRotationZ(f32);
+#[derive(Component)]
+struct HitBox(Aabb3d);
 
 #[derive(Clone, Debug, Event)]
 pub enum Action {
@@ -196,6 +198,9 @@ fn main() {
         )
             .run_if(in_state(AppState::Playing)),
     );
+
+    #[cfg(feature = "inspector")]
+    app.add_systems(Update, debug_hitboxes);
 
     app.add_systems(
         Update,
@@ -381,26 +386,14 @@ fn start_screen_music(
 fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     let pos = Vec3::new(0., BIRB_START_Y, 0.);
 
-    // Use a slightly more forgiving hitbox than the actual
-    // computed Aabb.
-    //
-    // There's a tradeoff here between head scraping and
-    // phantom belly collisions.
-    //
-    // Let's just live with that and not get too fancy with
-    // and a flappy bird clone.
-
-    let aabb = Aabb {
-        center: Vec3A::splat(0.),
-        half_extents: Vec3A::new(0.2, 0.3, 0.25),
-    };
+    let hitbox = HitBox(Aabb3d::new(Vec3A::splat(0.), Vec3A::new(0.2, 0.3, 0.25)));
 
     commands.spawn((
         SceneRoot(gltf_assets.birb.clone()),
         Transform::from_translation(pos).with_scale(Vec3::splat(0.25)),
         TargetPosition(pos),
         CurrentRotationZ(0.),
-        aabb,
+        hitbox,
         Birb,
         Name::new("Birb"),
         StateScoped(AppState::EndScreen),
@@ -409,28 +402,26 @@ fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
 
 fn collision(
     mut commands: Commands,
-    birb_query: Query<(&Aabb, &Transform), With<Birb>>,
+    birb_query: Query<(&HitBox, &Transform), With<Birb>>,
     score_collider_query: Query<
-        (&Aabb, &GlobalTransform, Entity),
+        (&HitBox, &GlobalTransform, Entity),
         (With<ScoreCollider>, Without<Used>),
     >,
-    obstacle_collider_query: Query<(&Aabb, &GlobalTransform), With<ObstacleCollider>>,
+    obstacle_collider_query: Query<(&HitBox, &GlobalTransform), With<ObstacleCollider>>,
     mut score: ResMut<Score>,
     mut next_state: ResMut<NextState<AppState>>,
     audio_assets: Res<AudioAssets>,
 ) {
-    let Ok((birb_aabb, transform)) = birb_query.single() else {
+    let Ok((birb_hitbox, transform)) = birb_query.single() else {
         return;
     };
 
-    let mut birb_aabb = *birb_aabb;
-    birb_aabb.center += Vec3A::from(transform.translation);
+    let birb_aabb = birb_hitbox.0.translated_by(transform.translation);
 
     for (score_aabb, transform, entity) in score_collider_query.iter() {
-        let mut score_aabb = *score_aabb;
-        score_aabb.center += Vec3A::from(transform.translation());
+        let score_aabb = score_aabb.0.translated_by(transform.translation());
 
-        if collide_aabb(&score_aabb, &birb_aabb) {
+        if score_aabb.intersects(&birb_aabb) {
             commands.entity(entity).insert(Used);
             score.0 += 2;
 
@@ -443,10 +434,9 @@ fn collision(
 
     let mut hit_obstacle = false;
     for (obstacle_aabb, transform) in obstacle_collider_query.iter() {
-        let mut obstacle_aabb = *obstacle_aabb;
-        obstacle_aabb.center += Vec3A::from(transform.translation());
+        let obstacle_aabb = obstacle_aabb.0.translated_by(transform.translation());
 
-        if collide_aabb(&obstacle_aabb, &birb_aabb) {
+        if obstacle_aabb.intersects(&birb_aabb) {
             hit_obstacle = true;
             break;
         }
@@ -459,6 +449,18 @@ fn collision(
             AudioPlayer(audio_assets.crash.clone()),
             PlaybackSettings::DESPAWN,
         ));
+    }
+}
+
+#[cfg(feature = "inspector")]
+fn debug_hitboxes(hitboxes: Query<(&HitBox, &GlobalTransform)>, mut gizmos: Gizmos) {
+    for (hitbox, transform) in &hitboxes {
+        let translated = hitbox.0.translated_by(transform.translation());
+        gizmos.cuboid(
+            Transform::from_scale((translated.half_size() * 2.0).into())
+                .with_translation(transform.translation()),
+            Color::WHITE,
+        );
     }
 }
 
@@ -481,51 +483,56 @@ fn spawn_obstacle(
 
     let gap_start = bag.next().unwrap();
 
-    let flange_height = 0.4;
-    let flange_radius = 0.8;
+    const FLANGE_HEIGHT: f32 = 0.4;
+    const FLANGE_RADIUS: f32 = 0.8;
+    const CYLINDER_RADIUS: f32 = 0.75;
     const CYLINDER_RESOLUTION: u32 = 16;
     const CYLINDER_SEGMENTS: u32 = 1;
 
     let bottom_height = gap_start;
+    let bottom_primitive = Cylinder {
+        radius: CYLINDER_RADIUS,
+        half_height: bottom_height / 2.,
+    };
     let bottom_cylinder = meshes.add(
-        Cylinder {
-            radius: 0.75,
-            half_height: bottom_height / 2.,
-        }
-        .mesh()
-        .resolution(CYLINDER_RESOLUTION)
-        .segments(CYLINDER_SEGMENTS)
-        .build(),
+        bottom_primitive
+            .mesh()
+            .resolution(CYLINDER_RESOLUTION)
+            .segments(CYLINDER_SEGMENTS)
+            .build(),
     );
     let bottom_y = bottom_height / 2.;
 
     let top_height = 10. - gap_start - GAP_SIZE;
+    let top_primitive = Cylinder {
+        radius: CYLINDER_RADIUS,
+        half_height: top_height / 2.,
+    };
     let top_cylinder = meshes.add(
-        Cylinder {
-            radius: 0.75,
-            half_height: top_height / 2.,
-        }
-        .mesh()
-        .resolution(CYLINDER_RESOLUTION)
-        .segments(CYLINDER_SEGMENTS)
-        .build(),
+        top_primitive
+            .mesh()
+            .resolution(CYLINDER_RESOLUTION)
+            .segments(CYLINDER_SEGMENTS)
+            .build(),
     );
     let top_y = gap_start + GAP_SIZE + top_height / 2.;
 
+    let flange_primitive = Cylinder {
+        radius: FLANGE_RADIUS,
+        half_height: FLANGE_HEIGHT / 2.,
+    };
     let flange = meshes.add(
-        Cylinder {
-            radius: flange_radius,
-            half_height: flange_height / 2.,
-        }
-        .mesh()
-        .resolution(CYLINDER_RESOLUTION)
-        .segments(CYLINDER_SEGMENTS)
-        .build(),
+        flange_primitive
+            .mesh()
+            .resolution(CYLINDER_RESOLUTION)
+            .segments(CYLINDER_SEGMENTS)
+            .build(),
     );
-    let bottom_flange_y = gap_start - flange_height / 2.;
-    let top_flange_y = gap_start + GAP_SIZE + flange_height / 2.;
+    let bottom_flange_y = gap_start - FLANGE_HEIGHT / 2.;
+    let top_flange_y = gap_start + GAP_SIZE + FLANGE_HEIGHT / 2.;
 
-    let middle = meshes.add(Cuboid::new(1.0, GAP_SIZE, 1.0));
+    let middle_primitive = Cuboid::new(1.0, GAP_SIZE, 1.0);
+    let middle = meshes.add(middle_primitive);
     let middle_y = gap_start + GAP_SIZE / 2.;
 
     commands
@@ -541,12 +548,14 @@ fn spawn_obstacle(
                 Mesh3d(bottom_cylinder),
                 MeshMaterial3d(materials.add(Color::from(LIME))),
                 Transform::from_xyz(0., bottom_y, 0.),
+                HitBox(bottom_primitive.aabb_3d(Isometry3d::IDENTITY)),
                 ObstacleCollider,
             ));
             parent.spawn((
                 Mesh3d(flange.clone()),
                 MeshMaterial3d(materials.add(Color::from(LIME))),
                 Transform::from_xyz(0., bottom_flange_y, 0.),
+                HitBox(flange_primitive.aabb_3d(Isometry3d::IDENTITY)),
                 ObstacleCollider,
             ));
 
@@ -554,18 +563,21 @@ fn spawn_obstacle(
                 Mesh3d(top_cylinder),
                 MeshMaterial3d(materials.add(Color::from(LIME))),
                 Transform::from_xyz(0., top_y, 0.),
+                HitBox(top_primitive.aabb_3d(Isometry3d::IDENTITY)),
                 ObstacleCollider,
             ));
             parent.spawn((
                 Mesh3d(flange.clone()),
                 MeshMaterial3d(materials.add(Color::from(LIME))),
                 Transform::from_xyz(0., top_flange_y, 0.),
+                HitBox(flange_primitive.aabb_3d(Isometry3d::IDENTITY)),
                 ObstacleCollider,
             ));
             parent.spawn((
                 Mesh3d(middle.clone()),
                 MeshMaterial3d(materials.add(Color::from(DEEP_PINK.with_alpha(0.5)))),
                 Transform::from_xyz(0., middle_y, 0.),
+                HitBox(middle_primitive.aabb_3d(Isometry3d::IDENTITY)),
                 Visibility::Hidden,
                 ScoreCollider,
                 Name::new("ScoreCollider"),
