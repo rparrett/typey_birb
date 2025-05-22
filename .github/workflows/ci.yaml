@@ -32,8 +32,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
       - name: Run cargo test
-        with:
-          command: test
+        run: cargo test
 
   # Run cargo clippy -- -D warnings
   clippy_check:
@@ -59,10 +58,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
       - name: Run clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-targets --all-features -- -D warnings -W clippy::doc_markdown
+        run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::doc_markdown
 
   # Run cargo fmt --all -- --check
   format:
@@ -76,6 +72,4 @@ jobs:
         with:
           components: rustfmt
       - name: Run cargo fmt
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
