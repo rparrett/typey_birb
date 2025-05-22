@@ -13,7 +13,13 @@ inspector = ["bevy_egui", "bevy-inspector-egui"]
 [dependencies]
 bevy = { version = "0.16", features = ["jpeg"] }
 bevy_egui = { version = "0.34.1", optional = true }
-bevy-inspector-egui = { version = "0.31", optional = true }
+bevy-inspector-egui = { version = "0.31", optional = true, default-features = false, features = [
+    "bevy_pbr",
+    "bevy_image",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "egui_clipboard",
+] }
 bevy_asset_loader = "0.23"
 bevy_pipelines_ready = "0.6"
 bevy_simple_prefs = "0.5.1"
