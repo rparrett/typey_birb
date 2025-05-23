@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.1 (2025-05-23
+
+* Use `bevy_cli` for web builds. Adds a progress bar for JS loading.
+
+## 0.6.0 (2025-05-23
+
+* Upgraded to Bevy 0.15
+* Upgraded to Bevy 0.16
+* Add persistent high score by @rparrett in ae8634d48be26524d49e7721ce8a69fa64096765)
+
 ## 0.5.0 (2024-07-12)
 
 * Upgraded to Bevy 0.14.
