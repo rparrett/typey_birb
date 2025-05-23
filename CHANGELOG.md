@@ -1,10 +1,14 @@
 # Changelog
 
-## 0.6.1 (2025-05-23
+## 0.6.2 (2025-05-23)
+
+* Show in-game loading text in middle
+
+## 0.6.1 (2025-05-23)
 
 * Use `bevy_cli` for web builds. Adds a progress bar for JS loading.
 
-## 0.6.0 (2025-05-23
+## 0.6.0 (2025-05-23)
 
 * Upgraded to Bevy 0.15
 * Upgraded to Bevy 0.16
