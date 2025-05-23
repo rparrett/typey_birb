@@ -50,7 +50,7 @@ jobs:
           zip --recurse-paths ../${{ env.binary }}.zip .
 
       - name: Upload binaries to artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: ${{ env.binary }}.zip
           name: wasm
@@ -98,7 +98,7 @@ jobs:
           zip --recurse-paths ../${{ env.binary }}.zip .
 
       - name: Upload binaries to artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: ${{ env.binary }}.zip
           name: linux
@@ -142,7 +142,7 @@ jobs:
           Compress-Archive -Path windows/* -DestinationPath ${{ env.binary }}.zip
 
       - name: Upload binaries to artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: ${{ env.binary }}.zip
           name: windows
@@ -187,7 +187,7 @@ jobs:
           hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ env.binary }}.dmg
 
       - name: Upload binaries to artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: ${{ env.binary }}.dmg
           name: mac
