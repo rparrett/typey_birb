@@ -55,9 +55,10 @@ impl Plugin for LoadingPlugin {
 
         app.add_plugins(PipelinesReadyPlugin);
 
-        app.add_systems(Startup, loading);
+        app.add_systems(Startup, setup_ui);
 
         app.add_systems(OnEnter(AppState::LoadingPipelines), preload);
+
         app.add_systems(
             Update,
             (
@@ -70,20 +71,22 @@ impl Plugin for LoadingPlugin {
     }
 }
 
-fn loading(mut commands: Commands) {
+fn setup_ui(mut commands: Commands) {
     commands.spawn((
-        Text::new("Loading..."),
-        TextFont {
-            font_size: 16.,
-            ..default()
-        },
         Node {
-            position_type: PositionType::Absolute,
-            bottom: Val::Px(5.),
-            left: Val::Px(5.),
+            width: Val::Percent(100.),
+            height: Val::Percent(100.),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
             ..default()
         },
-        GlobalZIndex(100),
+        Children::spawn(Spawn((
+            Text::new("Loading"),
+            TextFont {
+                font_size: 16.,
+                ..default()
+            },
+        ))),
         StateScoped(AppState::LoadingPipelines),
     ));
 }
