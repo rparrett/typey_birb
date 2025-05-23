@@ -25,34 +25,24 @@ jobs:
           toolchain: stable
           target: wasm32-unknown-unknown
           override: true
-      - name: install wasm-bindgen-cli
-        run: |
-          cargo install wasm-bindgen-cli
 
-      - name: Build
+      - name: Install bevy_cli
         run: |
-          cargo build --profile web-dist --target wasm32-unknown-unknown
+          cargo install --git https://github.com/TheBevyFlock/bevy_cli --locked bevy_cli --rev 326722d --features wasm-opt
 
-      - name: Prepare package
+      - name: Bundle
         run: |
-          wasm-bindgen --no-typescript --out-name bevy_game --out-dir wasm --target web target/wasm32-unknown-unknown/web-dist/${{ env.binary }}.wasm
-          cp -r assets wasm/
-
-      - name: Optimize Wasm
-        uses: NiklasEi/wasm-opt-action@v2
-        with:
-          file: target/wasm32-unknown-unknown/web-dist/*.wasm
-          optimize_all: true
+          bevy build --yes --release --profile web-dist web --bundle
 
       - name: Package as a zip
-        working-directory: ./wasm
+        working-directory: ./target/bevy_web/web-dist/${{ env.binary }}
         run: |
-          zip --recurse-paths ../${{ env.binary }}.zip .
+          zip --recurse-paths ${{ env.binary }}.zip .
 
       - name: Upload binaries to artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: ${{ env.binary }}.zip
+          path: ./target/bevy_web/web-dist/${{ env.binary }}/${{ env.binary }}.zip
           name: wasm
 
       - name: Upload binaries to release
@@ -60,7 +50,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.binary }}.zip
+          file: ./target/bevy_web/web-dist/${{ env.binary }}/${{ env.binary }}.zip
           asset_name: ${{ env.binary }}-wasm-${{ steps.get_version.outputs.tag }}.zip
           tag: ${{ github.ref }}
           overwrite: true

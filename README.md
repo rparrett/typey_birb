@@ -12,6 +12,13 @@ Completed in ~2 days for Bevy Jam #1.
 - [ ] add sfx / music mute buttons
 - [ ] the music is so bad
 
+## Build for web
+
+```
+cargo install --git https://github.com/TheBevyFlock/bevy_cli --locked bevy_cli --rev 326722d --features wasm-opt
+bevy run --release web
+```
+
 ## Acknowledgements
 
 The bevybird 3d model was created by `@Alexandcoats` and posted in the Bevy Discord server on January 24, 2021 and is used here with their permission. The Rival Bird uses this mesh with reworked textures.
