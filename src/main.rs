@@ -14,7 +14,7 @@ use bevy::{
 use bevy_simple_prefs::{Prefs, PrefsPlugin};
 
 #[cfg(feature = "inspector")]
-use {bevy_egui::EguiPlugin, bevy_inspector_egui::quick::WorldInspectorPlugin};
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 
 use loading::{AudioAssets, FontAssets, GltfAssets, LoadingPlugin};
 use luck::NextGapBag;
