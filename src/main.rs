@@ -158,9 +158,9 @@ fn main() {
 
     #[cfg(feature = "inspector")]
     {
-        // app.add_plugins(EguiPlugin {
-        //     enable_multipass_for_primary_context: true,
-        // });
+        app.add_plugins(EguiPlugin {
+            enable_multipass_for_primary_context: true,
+        });
         app.add_plugins(WorldInspectorPlugin::default());
         app.add_systems(Update, pause.run_if(in_state(AppState::Paused)));
         app.add_systems(Update, pause.run_if(in_state(AppState::Playing)));
