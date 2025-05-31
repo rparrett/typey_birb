@@ -13,9 +13,6 @@ use bevy::{
 };
 use bevy_simple_prefs::{Prefs, PrefsPlugin};
 
-#[cfg(feature = "inspector")]
-use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
-
 use loading::{AudioAssets, FontAssets, GltfAssets, LoadingPlugin};
 use luck::NextGapBag;
 
@@ -36,7 +33,7 @@ enum AppState {
     LoadingPipelines,
     StartScreen,
     Playing,
-    #[cfg(feature = "inspector")]
+    #[cfg(feature = "debug")]
     Paused,
     EndScreen,
 }
@@ -156,12 +153,10 @@ fn main() {
 
     app.add_plugins(LoadingPlugin);
 
-    #[cfg(feature = "inspector")]
+    #[cfg(feature = "debug")]
     {
-        app.add_plugins(EguiPlugin {
-            enable_multipass_for_primary_context: true,
-        });
-        app.add_plugins(WorldInspectorPlugin::default());
+        app.add_plugins(bevy::remote::RemotePlugin::default());
+        app.add_plugins(bevy::remote::http::RemoteHttpPlugin::default());
         app.add_systems(Update, pause.run_if(in_state(AppState::Paused)));
         app.add_systems(Update, pause.run_if(in_state(AppState::Playing)));
     }
@@ -209,7 +204,7 @@ fn main() {
             .run_if(in_state(AppState::Playing)),
     );
 
-    #[cfg(feature = "inspector")]
+    #[cfg(feature = "debug")]
     app.add_systems(Update, debug_hitboxes);
 
     app.add_systems(
@@ -229,7 +224,7 @@ fn main() {
     app.run();
 }
 
-#[cfg(feature = "inspector")]
+#[cfg(feature = "debug")]
 fn pause(
     mut keyboard: ResMut<ButtonInput<KeyCode>>,
     state: Res<State<AppState>>,
@@ -464,7 +459,7 @@ fn collision(
     }
 }
 
-#[cfg(feature = "inspector")]
+#[cfg(feature = "debug")]
 fn debug_hitboxes(hitboxes: Query<(&HitBox, &GlobalTransform)>, mut gizmos: Gizmos) {
     for (hitbox, transform) in &hitboxes {
         let translated = hitbox.0.translated_by(transform.translation());
