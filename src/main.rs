@@ -193,7 +193,7 @@ fn main() {
         (start_screen_movement, start_game, bad_flap_sound).run_if(in_state(AppState::StartScreen)),
     );
 
-    app.add_systems(OnEnter(AppState::Playing), (spawn_rival, game_music));
+    app.add_systems(OnExit(AppState::StartScreen), (spawn_rival, game_music));
     app.add_systems(
         Update,
         (
