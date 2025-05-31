@@ -48,6 +48,7 @@ fn start_screen(
             .with_scale(Vec3::splat(2.5))
             .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
         RivalPortrait,
+        Name::new("RivalPortrait"),
         StateScoped(AppState::StartScreen),
     ));
 
@@ -283,13 +284,16 @@ fn setup(
 ) {
     // root node
     let root = commands
-        .spawn(Node {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            justify_content: JustifyContent::SpaceBetween,
-            flex_direction: FlexDirection::Column,
-            ..default()
-        })
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::SpaceBetween,
+                flex_direction: FlexDirection::Column,
+                ..default()
+            },
+            Name::new("UiRoot"),
+        ))
         .id();
 
     let top_bar = commands
@@ -306,6 +310,7 @@ fn setup(
                 ..default()
             },
             BackgroundColor(Color::BLACK),
+            Name::new("TopBar"),
         ))
         .id();
 
@@ -330,6 +335,7 @@ fn setup(
                 ..default()
             },
             TypingTarget::new(top_word.clone(), vec![Action::BirbUp, Action::IncScore(1)]),
+            Name::new("TopWord"),
         ))
         .with_child((
             TextSpan::new(top_word),
@@ -356,6 +362,7 @@ fn setup(
                 ..default()
             },
             BackgroundColor(Color::BLACK),
+            Name::new("BottomBar"),
         ))
         .id();
 
@@ -377,6 +384,7 @@ fn setup(
                 bottom_word.clone(),
                 vec![Action::BirbDown, Action::IncScore(1)],
             ),
+            Name::new("BottomWord"),
         ))
         .with_child((
             TextSpan::new(bottom_word),

@@ -370,6 +370,7 @@ fn game_music(
         AudioPlayer(audio_assets.game.clone()),
         PlaybackSettings::LOOP,
         MusicController,
+        Name::new("GameMusic"),
     ));
 }
 
@@ -387,6 +388,7 @@ fn start_screen_music(
         AudioPlayer(audio_assets.menu.clone()),
         PlaybackSettings::LOOP,
         MusicController,
+        Name::new("StartScreenMusic"),
     ));
 }
 
