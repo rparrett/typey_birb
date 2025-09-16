@@ -3,7 +3,7 @@ use bevy::{
     platform::collections::HashSet,
     prelude::*,
 };
-use rand::prelude::*;
+use rand::{prelude::*, rng};
 
 pub struct TypingPlugin;
 
@@ -20,7 +20,7 @@ impl Default for WordList {
             .map(|w| w.to_owned())
             .filter(|w| w.chars().count() > 0)
             .collect::<Vec<_>>();
-        words.shuffle(&mut thread_rng());
+        words.shuffle(&mut rng());
         Self { words, index: 0 }
     }
 }
@@ -38,7 +38,7 @@ impl WordList {
     fn advance_word(&mut self) -> String {
         self.index += 1;
         if self.index >= self.words.len() {
-            self.words.shuffle(&mut thread_rng());
+            self.words.shuffle(&mut rng());
             self.index = 0;
         }
         self.words[self.index].clone()
@@ -92,7 +92,7 @@ impl Plugin for TypingPlugin {
 }
 
 fn new_words(
-    mut events: EventReader<crate::Action>,
+    mut events: MessageReader<crate::Action>,
     mut query: Query<(Entity, &mut TypingTarget)>,
     mut wordlist: ResMut<WordList>,
 ) {
@@ -115,9 +115,9 @@ fn new_words(
 }
 
 fn keyboard(
-    mut keyboard_events: EventReader<KeyboardInput>,
+    mut keyboard_events: MessageReader<KeyboardInput>,
     mut query: Query<(Entity, &mut TypingTarget)>,
-    mut events: EventWriter<crate::Action>,
+    mut events: MessageWriter<crate::Action>,
 ) {
     for event in keyboard_events.read() {
         let mut ok = false;

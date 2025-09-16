@@ -3,7 +3,7 @@ use crate::{
     Action, AppState, FontAssets, GltfAssets, HighScore, Score,
 };
 use bevy::{
-    color::palettes::css::LIME, pbr::NotShadowCaster, platform::collections::HashSet, prelude::*,
+    color::palettes::css::LIME, light::NotShadowCaster, platform::collections::HashSet, prelude::*,
     scene::SceneInstance,
 };
 
@@ -49,7 +49,7 @@ fn start_screen(
             .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
         RivalPortrait,
         Name::new("RivalPortrait"),
-        StateScoped(AppState::StartScreen),
+        DespawnOnExit(AppState::StartScreen),
     ));
 
     // text
@@ -67,7 +67,7 @@ fn start_screen(
                 flex_direction: FlexDirection::Column,
                 ..default()
             },
-            StateScoped(AppState::StartScreen),
+            DespawnOnExit(AppState::StartScreen),
         ))
         .id();
 
@@ -171,7 +171,7 @@ fn end_screen(
             .with_rotation(Quat::from_euler(EulerRot::XYZ, -0.1, -2.5, -0.8)),
         RivalPortrait,
         Name::new("RivalPortrait"),
-        StateScoped(AppState::EndScreen),
+        DespawnOnExit(AppState::EndScreen),
     ));
 
     // text
@@ -189,7 +189,7 @@ fn end_screen(
                 flex_direction: FlexDirection::Column,
                 ..default()
             },
-            StateScoped(AppState::EndScreen),
+            DespawnOnExit(AppState::EndScreen),
         ))
         .id();
 

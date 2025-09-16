@@ -4,11 +4,11 @@
 use bevy::{
     asset::AssetMetaCheck,
     color::palettes::css::{DEEP_PINK, LIME},
+    light::CascadeShadowConfigBuilder,
     math::{
         bounding::{Aabb3d, Bounded3d, BoundingVolume, IntersectsVolume},
         Vec3A, Vec3Swizzles,
     },
-    pbr::CascadeShadowConfigBuilder,
     prelude::*,
 };
 use bevy_simple_prefs::{Prefs, PrefsPlugin};
@@ -16,6 +16,9 @@ use bevy_simple_prefs::{Prefs, PrefsPlugin};
 use loading::{AudioAssets, FontAssets, GltfAssets, LoadingPlugin};
 use luck::NextGapBag;
 
+use crate::asset_tracking::AssetTrackingPlugin;
+
+mod asset_tracking;
 mod ground;
 mod loading;
 mod luck;
@@ -50,7 +53,7 @@ struct CurrentRotationZ(f32);
 #[derive(Component)]
 struct HitBox(Aabb3d);
 
-#[derive(Clone, Debug, Event)]
+#[derive(Clone, Debug, Message)]
 pub enum Action {
     BadFlap,
     BirbUp,
@@ -149,9 +152,8 @@ fn main() {
     );
 
     app.init_state::<AppState>();
-    app.enable_state_scoped_entities::<AppState>();
 
-    app.add_plugins(LoadingPlugin);
+    app.add_plugins((AssetTrackingPlugin, LoadingPlugin));
 
     #[cfg(feature = "debug")]
     {
@@ -171,7 +173,7 @@ fn main() {
             GAP_START_MIN_Y..GAP_START_MAX_Y,
             BIRB_START_Y,
         ))
-        .add_event::<Action>();
+        .add_message::<Action>();
 
     app.add_plugins(crate::typing::TypingPlugin)
         .add_plugins(crate::ui::UiPlugin)
@@ -337,14 +339,14 @@ fn spawn_rival(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         CurrentRotationZ(0.),
         Rival,
         Name::new("Rival"),
-        StateScoped(AppState::EndScreen),
+        DespawnOnExit(AppState::EndScreen),
     ));
 }
 
 fn bad_flap_sound(
     mut commands: Commands,
     audio_assets: Res<AudioAssets>,
-    mut events: EventReader<Action>,
+    mut events: MessageReader<Action>,
 ) {
     for e in events.read() {
         if let Action::BadFlap = e {
@@ -405,7 +407,7 @@ fn spawn_birb(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
         hitbox,
         Birb,
         Name::new("Birb"),
-        StateScoped(AppState::EndScreen),
+        DespawnOnExit(AppState::EndScreen),
     ));
 }
 
@@ -550,7 +552,7 @@ fn spawn_obstacle(
             Visibility::default(),
             Obstacle,
             Name::new("Obstacle"),
-            StateScoped(AppState::EndScreen),
+            DespawnOnExit(AppState::EndScreen),
         ))
         .with_children(|parent| {
             parent.spawn((
@@ -677,7 +679,7 @@ fn movement(
     }
 }
 
-fn retry_game(mut events: EventReader<Action>, mut next_state: ResMut<NextState<AppState>>) {
+fn retry_game(mut events: MessageReader<Action>, mut next_state: ResMut<NextState<AppState>>) {
     for e in events.read() {
         if let Action::Retry = e {
             next_state.set(AppState::StartScreen);
@@ -685,7 +687,7 @@ fn retry_game(mut events: EventReader<Action>, mut next_state: ResMut<NextState<
     }
 }
 
-fn start_game(mut events: EventReader<Action>, mut next_state: ResMut<NextState<AppState>>) {
+fn start_game(mut events: MessageReader<Action>, mut next_state: ResMut<NextState<AppState>>) {
     for e in events.read() {
         if let Action::Start = e {
             next_state.set(AppState::Playing);
@@ -693,7 +695,7 @@ fn start_game(mut events: EventReader<Action>, mut next_state: ResMut<NextState<
     }
 }
 
-fn update_score(mut events: EventReader<Action>, mut score: ResMut<Score>) {
+fn update_score(mut events: MessageReader<Action>, mut score: ResMut<Score>) {
     for e in events.read() {
         if let Action::IncScore(inc) = e {
             score.0 += inc
@@ -703,7 +705,7 @@ fn update_score(mut events: EventReader<Action>, mut score: ResMut<Score>) {
 
 fn update_target_position(
     mut commands: Commands,
-    mut events: EventReader<Action>,
+    mut events: MessageReader<Action>,
     mut query: Query<&mut TargetPosition>,
     audio_assets: Res<AudioAssets>,
 ) {

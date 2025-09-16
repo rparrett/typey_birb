@@ -1,10 +1,9 @@
 use std::ops::Range;
 
 use bevy::{
-    prelude::*,
-    render::{mesh::Indices, render_asset::RenderAssetUsages, render_resource::PrimitiveTopology},
+    asset::RenderAssetUsages, mesh::Indices, prelude::*, render::render_resource::PrimitiveTopology,
 };
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 
 use crate::{AppState, Speed};
 
@@ -102,7 +101,7 @@ pub fn ground_mesh(size: Vec2, num_vertices: UVec2) -> Mesh {
 
     let h_range: Range<f32> = -0.15..0.15;
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     let mut positions: Vec<[f32; 3]> = vec![];
     let mut normals = vec![];
@@ -116,7 +115,7 @@ pub fn ground_mesh(size: Vec2, num_vertices: UVec2) -> Mesh {
             let h = if x == num_vertices.x - 1 {
                 positions[z as usize][1]
             } else {
-                rng.gen_range(h_range.clone())
+                rng.random_range(h_range.clone())
             };
 
             positions.push([

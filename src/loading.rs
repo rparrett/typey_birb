@@ -1,43 +1,72 @@
 use bevy::prelude::*;
-use bevy_asset_loader::prelude::*;
 use bevy_pipelines_ready::{PipelinesReady, PipelinesReadyPlugin};
 
-use crate::AppState;
+use crate::{
+    asset_tracking::{LoadResource, ResourceHandles},
+    AppState,
+};
 
-#[derive(AssetCollection, Resource)]
+#[derive(Resource, Asset, Clone, Reflect)]
+#[reflect(Resource)]
 pub struct GltfAssets {
-    #[asset(path = "bevybird_gold.glb#Scene0")]
     pub birb_gold: Handle<Scene>,
-    #[asset(path = "bevybird.glb#Scene0")]
     pub birb: Handle<Scene>,
 }
 
-#[derive(AssetCollection, Resource)]
+impl FromWorld for GltfAssets {
+    fn from_world(world: &mut World) -> Self {
+        let assets = world.resource::<AssetServer>();
+        Self {
+            birb_gold: assets.load("bevybird_gold.glb#Scene0"),
+            birb: assets.load("bevybird.glb#Scene0"),
+        }
+    }
+}
+
+#[derive(Resource, Asset, Clone, Reflect)]
+#[reflect(Resource)]
 pub struct FontAssets {
-    #[asset(path = "Amatic-Bold.ttf")]
     pub main: Handle<Font>,
 }
 
-#[derive(AssetCollection, Resource)]
+impl FromWorld for FontAssets {
+    fn from_world(world: &mut World) -> Self {
+        let assets = world.resource::<AssetServer>();
+        Self {
+            main: assets.load("Amatic-Bold.ttf"),
+        }
+    }
+}
+
+#[derive(Resource, Asset, Clone, Reflect)]
+#[reflect(Resource)]
 pub struct AudioAssets {
-    #[asset(path = "menu.ogg")]
     pub menu: Handle<AudioSource>,
-    #[asset(path = "play.ogg")]
     pub game: Handle<AudioSource>,
-    #[asset(path = "flap.ogg")]
     pub flap: Handle<AudioSource>,
-    #[asset(path = "badflap.ogg")]
     pub badflap: Handle<AudioSource>,
-    #[asset(path = "score.ogg")]
     pub score: Handle<AudioSource>,
-    #[asset(path = "crash.ogg")]
     pub crash: Handle<AudioSource>,
-    #[asset(path = "bump.ogg")]
     pub bump: Handle<AudioSource>,
 }
 
+impl FromWorld for AudioAssets {
+    fn from_world(world: &mut World) -> Self {
+        let assets = world.resource::<AssetServer>();
+        Self {
+            menu: assets.load("menu.ogg"),
+            game: assets.load("play.ogg"),
+            flap: assets.load("flap.ogg"),
+            badflap: assets.load("badflap.ogg"),
+            score: assets.load("score.ogg"),
+            crash: assets.load("crash.ogg"),
+            bump: assets.load("bump.ogg"),
+        }
+    }
+}
+
 #[cfg(not(target_arch = "wasm32"))]
-const EXPECTED_PIPELINES: usize = 33;
+const EXPECTED_PIPELINES: usize = 39;
 #[cfg(target_arch = "wasm32")]
 const EXPECTED_PIPELINES: usize = 10;
 
@@ -45,15 +74,11 @@ pub struct LoadingPlugin;
 
 impl Plugin for LoadingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_loading_state(
-            LoadingState::new(AppState::LoadingAssets)
-                .load_collection::<GltfAssets>()
-                .load_collection::<FontAssets>()
-                .load_collection::<AudioAssets>()
-                .continue_to_state(AppState::LoadingPipelines),
-        );
-
         app.add_plugins(PipelinesReadyPlugin);
+
+        app.load_resource::<GltfAssets>();
+        app.load_resource::<FontAssets>();
+        app.load_resource::<AudioAssets>();
 
         app.add_systems(Startup, setup_ui);
 
@@ -62,6 +87,7 @@ impl Plugin for LoadingPlugin {
         app.add_systems(
             Update,
             (
+                check_assets.run_if(in_state(AppState::LoadingAssets)),
                 print_pipelines.run_if(resource_changed::<PipelinesReady>),
                 check_pipelines
                     .run_if(in_state(AppState::LoadingPipelines))
@@ -87,7 +113,7 @@ fn setup_ui(mut commands: Commands) {
                 ..default()
             },
         ))),
-        StateScoped(AppState::LoadingPipelines),
+        DespawnOnExit(AppState::LoadingPipelines),
     ));
 }
 
@@ -95,12 +121,12 @@ fn preload(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     commands.spawn((
         SceneRoot(gltf_assets.birb.clone()),
         Transform::from_scale(Vec3::splat(0.1)),
-        StateScoped(AppState::LoadingPipelines),
+        DespawnOnExit(AppState::LoadingPipelines),
     ));
     commands.spawn((
         SceneRoot(gltf_assets.birb_gold.clone()),
         Transform::from_scale(Vec3::splat(0.1)),
-        StateScoped(AppState::LoadingPipelines),
+        DespawnOnExit(AppState::LoadingPipelines),
     ));
 }
 
@@ -112,4 +138,15 @@ fn check_pipelines(ready: Res<PipelinesReady>, mut next_state: ResMut<NextState<
     if ready.get() >= EXPECTED_PIPELINES {
         next_state.set(AppState::StartScreen);
     }
+}
+
+fn check_assets(
+    resource_handles: Res<ResourceHandles>,
+    mut next_state: ResMut<NextState<AppState>>,
+) {
+    if resource_handles.is_all_done() {
+        return;
+    }
+
+    next_state.set(AppState::LoadingPipelines);
 }
