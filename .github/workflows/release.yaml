@@ -28,7 +28,7 @@ jobs:
 
       - name: Install bevy_cli
         run: |
-          cargo install --git https://github.com/TheBevyFlock/bevy_cli --locked bevy_cli --rev 326722d --features wasm-opt
+          cargo install --git https://github.com/TheBevyFlock/bevy_cli --tag cli-v0.1.0-alpha.2 --locked bevy_cli
 
       - name: Bundle
         run: |
@@ -70,7 +70,7 @@ jobs:
           override: true
       - name: install dependencies
         run: |
-          sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+          sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libwayland-dev
 
       - name: Build
         run: |

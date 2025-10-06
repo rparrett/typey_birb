@@ -31,7 +31,7 @@ pub struct NextGapBag {
 }
 impl NextGapBag {
     pub fn new(range: Range<f32>, initial_value: f32) -> Self {
-        let mut rng = StdRng::from_entropy();
+        let mut rng = StdRng::from_os_rng();
 
         let mut contents = vec![
             NextGapKind::VerySmall,
@@ -89,17 +89,17 @@ impl Iterator for NextGapBag {
         let up = up_min..up_max;
 
         let val = match (up.is_empty(), down.is_empty()) {
-            (false, true) => self.rng.gen_range(up),
-            (true, false) => self.rng.gen_range(down),
+            (false, true) => self.rng.random_range(up),
+            (true, false) => self.rng.random_range(down),
             (false, false) => {
-                if self.rng.gen() {
-                    self.rng.gen_range(up)
+                if self.rng.random() {
+                    self.rng.random_range(up)
                 } else {
-                    self.rng.gen_range(down)
+                    self.rng.random_range(down)
                 }
             }
             (true, true) => {
-                if self.rng.gen() {
+                if self.rng.random() {
                     up.start
                 } else {
                     down.start

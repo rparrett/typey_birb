@@ -11,12 +11,11 @@ license = "MIT OR Apache-2.0"
 debug = ["bevy/bevy_remote"]
 
 [dependencies]
-bevy = { version = "0.16", features = ["jpeg"] }
-bevy_asset_loader = "0.23"
-bevy_pipelines_ready = "0.6"
-bevy_simple_prefs = "0.5.1"
+bevy = { version = "0.17", features = ["jpeg"] }
+bevy_pipelines_ready = { version = "0.7" }
+bevy_simple_prefs = { version = "0.7" }
 
-rand = "0.8"
+rand = "0.9"
 
 # Disable low-severity logs at compile time for performance.
 log = { version = "0.4", features = [
