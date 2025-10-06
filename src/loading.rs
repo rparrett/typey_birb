@@ -144,7 +144,7 @@ fn check_assets(
     resource_handles: Res<ResourceHandles>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
-    if resource_handles.is_all_done() {
+    if !resource_handles.is_all_done() {
         return;
     }
 
