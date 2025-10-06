@@ -11,9 +11,9 @@ license = "MIT OR Apache-2.0"
 debug = ["bevy/bevy_remote"]
 
 [dependencies]
-bevy = { version = "0.17.0-rc.1", features = ["jpeg"] }
-bevy_pipelines_ready = { git = "https://github.com/rparrett/bevy_pipelines_ready", branch = "bevy-0.17" }
-bevy_simple_prefs = { git = "https://github.com/rparrett/bevy_simple_prefs", branch = "bevy-0.17" }
+bevy = { version = "0.17", features = ["jpeg"] }
+bevy_pipelines_ready = { version = "0.7" }
+bevy_simple_prefs = { version = "0.7" }
 
 rand = "0.9"
 
