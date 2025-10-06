@@ -28,7 +28,7 @@ jobs:
 
       - name: Install bevy_cli
         run: |
-          cargo install --git https://github.com/TheBevyFlock/bevy_cli --locked bevy_cli --rev 326722d --features wasm-opt
+          cargo install --git https://github.com/TheBevyFlock/bevy_cli --tag cli-v0.1.0-alpha.2 --locked bevy_cli
 
       - name: Bundle
         run: |
