@@ -69,6 +69,12 @@ impl FromWorld for AudioAssets {
 const EXPECTED_PIPELINES: usize = 39;
 #[cfg(target_arch = "wasm32")]
 const EXPECTED_PIPELINES: usize = 10;
+// Bevy's framerate seems to take a few seconds to fully recover after
+// pipelines are compiled when running in Firefox.
+#[cfg(not(target_arch = "wasm32"))]
+const ADDITIONAL_WAIT_FRAMES: u32 = 10;
+#[cfg(target_arch = "wasm32")]
+const ADDITIONAL_WAIT_FRAMES: u32 = 50;
 
 pub struct LoadingPlugin;
 
@@ -89,9 +95,7 @@ impl Plugin for LoadingPlugin {
             (
                 check_assets.run_if(in_state(AppState::LoadingAssets)),
                 print_pipelines.run_if(resource_changed::<PipelinesReady>),
-                check_pipelines
-                    .run_if(in_state(AppState::LoadingPipelines))
-                    .run_if(resource_changed::<PipelinesReady>),
+                check_pipelines.run_if(in_state(AppState::LoadingPipelines)),
             ),
         );
     }
@@ -120,12 +124,12 @@ fn setup_ui(mut commands: Commands) {
 fn preload(mut commands: Commands, gltf_assets: Res<GltfAssets>) {
     commands.spawn((
         SceneRoot(gltf_assets.birb.clone()),
-        Transform::from_scale(Vec3::splat(0.1)),
+        Transform::from_scale(Vec3::splat(0.1)).with_translation(Vec3::Y * -1.0),
         DespawnOnExit(AppState::LoadingPipelines),
     ));
     commands.spawn((
         SceneRoot(gltf_assets.birb_gold.clone()),
-        Transform::from_scale(Vec3::splat(0.1)),
+        Transform::from_scale(Vec3::splat(0.1)).with_translation(Vec3::Y * -1.0),
         DespawnOnExit(AppState::LoadingPipelines),
     ));
 }
@@ -134,17 +138,40 @@ fn print_pipelines(ready: Res<PipelinesReady>) {
     info!("Pipelines Ready: {}/{}", ready.get(), EXPECTED_PIPELINES);
 }
 
-fn check_pipelines(ready: Res<PipelinesReady>, mut next_state: ResMut<NextState<AppState>>) {
-    if ready.get() >= EXPECTED_PIPELINES {
-        next_state.set(AppState::StartScreen);
+fn check_pipelines(
+    ready: Res<PipelinesReady>,
+    mut next_state: ResMut<NextState<AppState>>,
+    mut frames_since_pipelines_ready: Local<u32>,
+) {
+    if ready.get() < EXPECTED_PIPELINES {
+        return;
     }
+
+    *frames_since_pipelines_ready += 1;
+
+    if *frames_since_pipelines_ready < ADDITIONAL_WAIT_FRAMES {
+        return;
+    }
+
+    next_state.set(AppState::StartScreen);
 }
 
 fn check_assets(
     resource_handles: Res<ResourceHandles>,
     mut next_state: ResMut<NextState<AppState>>,
+    mut frames_since_assets_ready: Local<u32>,
 ) {
     if !resource_handles.is_all_done() {
+        return;
+    }
+
+    // Force at least one frame to pass before moving on to pipeline compilation so that the UI
+    // pipeline gets compiled separately and we display the loading text while the other pipelines
+    // are compiling.
+
+    *frames_since_assets_ready += 1;
+
+    if *frames_since_assets_ready < 2 {
         return;
     }
 
